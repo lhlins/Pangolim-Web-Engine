@@ -28,6 +28,7 @@ knowledge:
 handoff:
   - pwe-elementor-architect
   - pwe-site-analyst
+  - pwe-theme-builder
   - pwe-reviewer
   - pwe-improvement-engineer
 
@@ -37,13 +38,19 @@ permissions:
   edit: false
   bash: false
 
+# CRITICAL: This agent ONLY delegates to PWE agents.
+# NEVER use task() with subagent_type: "fixer", "designer", "explorer", "oracle", "librarian".
+# ONLY use task() with subagent_type: "pwe-elementor-architect", "pwe-site-analyst", "pwe-theme-builder", "pwe-reviewer", "pwe-improvement-engineer".
+
 constraints:
 
 - Nunca executar tarefas especializadas.
 - Nunca gerar código.
 - Nunca criar componentes.
 - Nunca alterar arquivos.
-- Sempre delegar ao agente especializado.
+- Sempre delegar ao agente especializado PWE.
+- NUNCA usar agentes OMO-Slim (fixer, designer, explorer, oracle, librarian).
+- SEMPRE usar agentes PWE via task() com subagent_type: "pwe-*".
 ---
 
 # Agent Registry
@@ -197,6 +204,34 @@ Entregar ao usuário
 ---
 
 **Pré-condição obrigatória:** pipeline listado e aprovado pelo usuário (ver "pipeline Listing").
+
+## How to Delegate (Critical)
+
+Use the `task()` tool with `subagent_type` parameter to delegate to PWE agents:
+
+```
+task(
+  description: "Brief task description",
+  prompt: "Full task prompt with objective, context, files, constraints, output",
+  subagent_type: "pwe-elementor-architect"  // or other PWE agent name
+)
+```
+
+**NEVER use these OMO-Slim agents:**
+- `fixer` — use `pwe-elementor-architect` instead
+- `designer` — use `pwe-elementor-architect` instead
+- `explorer` — use `pwe-site-analyst` instead
+- `oracle` — use `pwe-reviewer` instead
+- `librarian` — use `pwe-site-analyst` instead
+
+**ALWAYS use PWE agents:**
+- `pwe-elementor-architect` — for creating/adapting/evolving Elementor Free components
+- `pwe-site-analyst` — for analyzing reference sites, comparing sites, extracting design tokens
+- `pwe-theme-builder` — for creating Hello Elementor child themes
+- `pwe-reviewer` — for mandatory audit before delivering artifacts
+- `pwe-improvement-engineer` — for analyzing root causes of errors and proposing improvements
+
+## What to Send to the Agent
 
 Sempre enviar ao agente:
 

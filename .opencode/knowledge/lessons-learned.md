@@ -15,3 +15,10 @@
 - **Sintoma:** Estilos do tema filho (ex: cor de link ou heading) não se aplicam, sendo ignorados em favor das cores do Elementor Kit ou Reset.css do tema pai.
 - **Causa:** O Elementor aplica cores globais (--e-global-color-*) com seletores de alta especificidade ou propriedades inline. O Reset do Hello Elementor aplica cores hardcoded para tags .
 - **Correção:** Usar seletores compostos (ex: .main-navigation a, .elementor-widget-heading .elementor-heading-title) e, se necessário, a flag !important para garantir a sobreposição das variáveis do Design System (--ppa-*).
+
+## 4. Estilização de Containers no Elementor Free (Bugs de DOM e _css_classes)
+- **Sintoma:** Classes CSS atribuídas via _css_classes em containers no JSON do Elementor não aparecem no HTML renderizado, deixando cards empilhados, sem borda ou sem efeito hover.
+- **Causa Raiz:** O Elementor Free ignora a propriedade _css_classes para elementos do tipo container (só aplica em widget). Além disso, o Elementor injeta múltiplos wrappers .e-con-inner intermediários entre contêineres pai e filho, tornando seletores posicionais como > .e-child propensos a falhas de profundidade.
+- **Correção Definitiva:**
+  1. Inspecionar o HTML renderizado do site para obter os valores reais de data-id que o Elementor atribuiu aos containers.
+  2. Mapear os seletores CSS usando atribuição direta por data-id (ex: [data-id="247ef2e4"]) combinados com fallbacks estruturais profundos que consideram as divs .e-con-inner intermediárias.
