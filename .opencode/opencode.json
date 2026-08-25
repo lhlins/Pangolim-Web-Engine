@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [],
+  "skill": {
+    "pwe-generate-elementor-json": { "path": ".opencode/skills/pwe-generate-elementor-json" },
+    "pwe-generate-css": { "path": ".opencode/skills/pwe-generate-css" },
+    "pwe-generate-js": { "path": ".opencode/skills/pwe-generate-js" },
+    "pwe-plan-component": { "path": ".opencode/skills/pwe-plan-component" },
+    "pwe-build-elementor-structure": { "path": ".opencode/skills/pwe-build-elementor-structure" },
+    "pwe-read-design-system": { "path": ".opencode/skills/pwe-read-design-system" },
+    "pwe-validate-component": { "path": ".opencode/skills/pwe-validate-component" },
+    "pwe-apply-patch": { "path": ".opencode/skills/pwe-apply-patch" },
+    "pwe-catalog-component": { "path": ".opencode/skills/pwe-catalog-component" },
+    "pwe-analyze-site-structure": { "path": ".opencode/skills/pwe-analyze-site-structure" },
+    "pwe-analyze-site-styles": { "path": ".opencode/skills/pwe-analyze-site-styles" },
+    "pwe-compare-sites": { "path": ".opencode/skills/pwe-compare-sites" },
+    "pwe-extract-design-tokens": { "path": ".opencode/skills/pwe-extract-design-tokens" },
+    "pwe-sync-tokens-to-ds": { "path": ".opencode/skills/pwe-sync-tokens-to-ds" },
+    "pwe-analyze-problem": { "path": ".opencode/skills/pwe-analyze-problem" },
+    "pwe-find-root-cause": { "path": ".opencode/skills/pwe-find-root-cause" },
+    "pwe-propose-improvement": { "path": ".opencode/skills/pwe-propose-improvement" },
+    "pwe-generate-improvement-patch": { "path": ".opencode/skills/pwe-generate-improvement-patch" },
+    "pwe-plan-theme": { "path": ".opencode/skills/pwe-plan-theme" },
+    "pwe-generate-child-theme": { "path": ".opencode/skills/pwe-generate-child-theme" },
+    "pwe-validate-theme": { "path": ".opencode/skills/pwe-validate-theme" }
+  },
+  "agent": {
+    "pwe-elementor-architect": {
+      "description": "Projeta componentes reutilizáveis para WordPress utilizando exclusivamente Elementor Free e o tema Hello. Analisa o Design System informado pelo usuário, define a arquitetura do componente, gera especificações técnicas e orquestra a produção dos artefatos necessários para integração ao Pangolim Web Engine.",
+      "prompt": ".opencode/agents/pwe-elementor-architect.md"
+    },
+    "pwe-orchestrator": {
+      "description": "Agente responsável por interpretar solicitações do usuário, selecionar o agente mais adequado para cada tarefa, coordenar o fluxo de execução e coreeção e consolidar a entrega final.",
+      "prompt": ".opencode/agents/pwe-orchestrator.md"
+    },
+    "pwe-improvement-engineer": {
+      "description": "Agente responsável pela melhoria contínua do Pangolim Web Engine. Analisa erros, retrabalho, falhas recorrentes e oportunidades de evolução dos agentes, skills e processos, propondo melhorias estruturadas e evitando a repetição dos mesmos problemas.",
+      "prompt": ".opencode/agents/pwe-improvement-engineer.md"
+    },
+    "pwe-site-analyst": {
+      "description": "Especialista em análise técnica de sites de referência. Extrai estrutura DOM, estilos computados, tokens de design, comportamentos JS e compara dois sites, gerando relatórios técnicos para orientar decisões no Pangolim Web Engine.",
+      "prompt": ".opencode/agents/pwe-site-analyst.md"
+    },
+    "pwe-theme-builder": {
+      "description": "Cria temas filho a partir do Hello Elementor e configura them conforme um Design System fornecido. Gera style.css com tokens CSS custom properties, functions.php para enqueue de estilos, e screenshot placeholder.",
+      "prompt": ".opencode/agents/pwe-theme-builder.md"
+    }
+  }
+}
