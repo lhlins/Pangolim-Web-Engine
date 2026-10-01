@@ -158,6 +158,23 @@ Regra:
 - Classes CSS so devem ser definidas em widgets.
 - Containers devem ser estilizados via seletores estruturais ou de atributo.
 
+### Proibido: HTML Inline via Widgets
+
+NUNCA usar widget HTML com conteúdo HTML inline.
+NUNCA usar text-editor com HTML inline como workaround para estrutura completa.
+
+Sempre dividir conteúdo em widgets nativos do Elementor Free:
+- heading → títulos (h1-h6)
+- text → parágrafos, textos simples
+- button → CTAs, links estilizados
+- image → imagens, backgrounds
+- icon → ícones
+- spacer/divider → espaçamento visual, separadores
+
+Checklist de saída obrigatório:
+- Widgets usados: [lista] — Zero HTML inline em qualquer widget
+- Se detectado HTML inline → interromper blueprint e reportar erro crítico
+
 ### Limitacoes de widgets Elementor Free
 
 Consultar .opencode/knowledge/elementor-limitations.md para conhecer

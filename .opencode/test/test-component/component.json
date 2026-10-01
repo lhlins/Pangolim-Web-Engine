@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "title": "Test Component",
+  "type": "section",
+  "content": [
+    {
+      "id": "container-1",
+      "elType": "container",
+      "settings": {
+        "content_width": {
+          "unit": "px",
+          "size": 1200
+        }
+      },
+      "elements": []
+    }
+  ]
+}

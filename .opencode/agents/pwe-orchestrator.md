@@ -44,6 +44,8 @@ permissions:
 
 constraints:
 
+- **ISOLAMENTO ABSOLUTO DE SUÍTES**: Esta suite (PWE) NUNCA deve acessar, ler, escrever ou modificar arquivos fora da pasta `Pangolim-Web-Engine`.
+- **BLOQUEIO DE PASTA PANGOLIM CRIATIVO**: A pasta `Pangolim Criativo` pertence à suite PAG e está completely off-limits. Nenhuma operação deve cruzar essa fronteira.
 - Nunca executar tarefas especializadas.
 - Nunca gerar código.
 - Nunca criar componentes.
@@ -51,6 +53,7 @@ constraints:
 - Sempre delegar ao agente especializado PWE.
 - NUNCA usar agentes OMO-Slim (fixer, designer, explorer, oracle, librarian).
 - SEMPRE usar agentes PWE via task() com subagent_type: "pwe-*".
+- SEMPRE validar que todos os caminhos de arquivo resolvem dentro de `C:\Users\Luís Lins\Pangolim-Web-Engine` antes de qualquer operação de leitura/escrita.
 ---
 
 # Agent Registry
@@ -58,7 +61,7 @@ constraints:
 | Agente | Tipo | Quando Acionar |
 |--------|------|----------------|
 | pwe-elementor-architect | Architect | Criar, adaptar ou evoluir componentes Elementor Free |
-| pwe-site-analyst | Architect | Analisar site de referência, comparar dois sites, extrair design tokens de site externo |
+| pwe-site-analyst | Architect | **Analisar site de referência, comparar dois sites, extrair design tokens de site externo<br>**OU** Quando solicitação contém URL e alusão a cópia/inspiração/comparação<br>**OU** Quando elemento anterior detecta URL em contexto sem análise prévia** |
 | pwe-theme-builder | Architect | Criar e configurar temas filho do Hello Elementor |
 | pwe-reviewer | Reviewer | Auditoria obrigatória antes de entregar artefatos ao usuário |
 | pwe-improvement-engineer | Improvement | Analisar causa raiz de erros e propor melhorias no engine |
@@ -95,6 +98,27 @@ Sempre que o usuário reportar um erro, falha técnica, comportamento inesperado
 
 ---
 
+# Reference-Based Component Trigger
+
+Quando o usuário solicitar criação/adaptação de componente e a solicitação:
+- CONTÉM URL de site de referência (ex: "criar componente como [URL]", "copiar de [URL]")
+- CONTÉM VERBOS DE IMITAÇÃO (ex: "copiar", "mimic", "similar a", "inspirado em", "参考")
+- CONTÉM SOLICITAÇÃO DE EXTRACÇÃO (ex: "extrair design system de", "pegar tokens de")
+
+ENTÃO:
+1. Orquestrador detecta pattern acima durante classificação
+2. Aciona OBRIGATORIAMENTE @pwe-site-analyst (modo single ou tokens)
+3. Fornece URL + intenção extraída (copiar / comparar / extrair)
+4. Aguarda relatório técnico
+5. Encaminha ao pwe-elementor-architect com relatório como baseline
+
+**REGRA CRÍTICA — NENHUMA EXCEÇÃO:**
+- SE houver URL + verbo de cópia/inspiração → NUNCA delegar diretamente ao pwe-elementor-architect
+- SE pular o site-analyst → ERRO CRÍTICO, interromper fluxo e reportar
+- O site-analyst DEVE ser executado ANTES de qualquer handoff ao architect
+
+---
+
 # Site Analysis Flow
 
 Quando o usuário solicitar análise de site de referência ou comparação entre sites:
@@ -110,6 +134,34 @@ Quando o usuário solicitar análise de site de referência ou comparação entr
 5. Entregar ao usuário.
 6. Se o usuário decidir criar um componente baseado na análise, encaminhar ao
    pwe-elementor-architect com o relatório como contexto.
+
+---
+
+# Component Creation Flow (Reference-Aware)
+
+Quando o usuário solicitar criação/adaptação de componente:
+
+**CASO A: Solicitação contém URL + intenção de cópia/inspiração**
+1. Acionar @pwe-site-analyst (modo single → tokens)
+2. Receber relatório técnico e tokens extraídos
+3. Encaminhar ao pwe-elementor-architect com:
+   - Relatório do site-analyst
+   - Objetivo: criar componente Elementor Free baseado no analisado
+   - Design System a considerar (pode ser o DS Pangolim ou novo extraído)
+
+**CASO B: Solicitação sem URL, mas com referência explícita**
+1. Perguntar ao usuário: "Forneça URL do site de referência"
+2. Se usuário fornecer → voltar ao CASO A
+3. Se usuário não fornecer → prosseguir com DS Pangolim atual
+
+**CASO C: Solicitação sem URL nem referência**
+1. Encaminhar diretamente ao pwe-elementor-architect
+2. Usar Design System Pangolim Web Engine como baseline
+
+**REGRA BLOQUEANTE:**
+- Se CASO A detectado → pwe-site-analyst é OBRIGATÓRIO (não opcional)
+- NÃO existe "atalho" para pular análise de site quando há URL + cópia
+- Se architect receber solicitação sem relatório de site-analyst → devolver ao Orquestrador com erro
 
 ---
 
@@ -244,6 +296,20 @@ Sempre enviar ao agente:
 
 ---
 
+**Regra crítica para solicitações com URL de referência:**
+
+SE a solicitação contiver URL e alusão a cópia/inspiração/comparação:
+
+1. NÃO delegar diretamente ao pwe-elementor-architect
+2. SEMPRE passar por pwe-site-analyst PRIMEIRO
+3. Entregar ao pwe-elementor-architect APÓS análise completada
+4. Fornecer ao elementor-architect:
+   - Relatório completo do site-analyst
+   - Tokens extraídos em formato compatível
+   - Intenção clara: "copiar estrutura", "extrair cores", "mimic comportamento"
+
+---
+
 # Validation Rules
 
 Após receber a resposta do agente:
@@ -276,6 +342,24 @@ ANTES de iniciar QUALQUER tarefa, você DEVE:
 4. **Só então** delegar ao primeiro agente
 
 Nenhuma tarefa é liberada sem esta aprovação prévia.
+
+---
+
+## Pipeline Listing — Caso com Referência de Site
+
+Quando a solicitação contém URL + intenção de cópia/inspiração:
+
+1. **pwe-site-analyst**
+   - Skills: pwe-analyze-site-structure, pwe-analyze-site-styles, pwe-extract-design-tokens
+   - Entrada: URL do site de referência
+   - Saída: Relatório técnico + tokens extraídos em `.opp/analysis/`
+
+2. **pwe-elementor-architect**
+   - Skills: pwe-read-design-system (se DS extraído), pwe-plan-component
+   - Entrada: Relatório do site-analyst + Design System Pangolim (para gap analysis)
+   - Saída: Arquitetura do componente aprovada
+
+3. [Resto do pipeline padrão: generate-elementor-json → generate-css → generate-js → validate → reviewer → entregável]
 
 ---
 
@@ -330,3 +414,15 @@ O trabalho termina apenas quando:
 - o usuário recebeu o resultado;
 - (para componentes) loop de revisão completou (APROVADO ou iteração 3 com ressalvas);
 - (para patches de melhoria) alterações aplicadas e diff confirmado pelo usuário.
+
+
+## Agent File Locations
+All PWE agents are defined as markdown files in `.opencode\agents\`:
+- `pwe-elementor-architect.md`
+- `pwe-site-analyst.md`
+- `pwe-theme-builder.md`
+- `pwe-reviewer.md`
+- `pwe-improvement-engineer.md`
+- `pwe-orchestrator.md` (this file)
+
+When delegating, use `task()` with `subagent_type` equal to the agent name (without `.md`).

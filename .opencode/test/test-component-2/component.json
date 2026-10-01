@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "title": "Test Component 2",
+  "type": "section",
+  "content": [
+    {
+      "id": "container-1",
+      "elType": "container",
+      "settings": {
+        "content_width": "full"
+      },
+      "elements": [
+        {
+          "id": "widget-1",
+          "elType": "widget",
+          "widgetType": "heading",
+          "settings": {
+            "title": "Test Heading"
+          }
+        }
+      ]
+    }
+  ]
+}

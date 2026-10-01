@@ -2,7 +2,7 @@
 name: pwe-catalog-component
 
 description: |
-  Gera e mantém o catálogo de componentes (_catalog.md) e a ficha técnica
+  Gera e mantém o catálogo de componentes (_catalog.md e _catalog.json) e a ficha técnica
   (technical-spec.md) de cada componente no diretório .opp/components/.
   Atualiza automaticamente após aprovação do Review Loop.
 
@@ -32,7 +32,7 @@ constraints:
 
 # Mission
 
-Manter o catálogo centralizado de componentes (.opp/components/_catalog.md)
+Manter o catálogo centralizado de componentes (.opp/components/_catalog.md e .opp/components/_catalog.json)
 e as fichas técnicas individuais (.opp/components/{nome}/technical-spec.md)
 sempre atualizados, refletindo o estado real de cada componente no engine.
 
@@ -42,6 +42,7 @@ sempre atualizados, refletindo o estado real de cada componente no engine.
 
 Responsabilidades:
 - Gerar/atualizar .opp/components/_catalog.md
+- Gerar/atualizar .opp/components/_catalog.json (registro machine-readable para agentes)
 - Gerar/atualizar .opp/components/{nome}/technical-spec.md
 - Extrair metadados do component.json, audit report, architecture.md
 - Registrar versão, status de auditoria, data, descrição
@@ -76,19 +77,21 @@ Recebe:
 
 # Process
 
-## 1. Atualizar Catálogo Principal (_catalog.md)
+## 1. Atualizar Catálogo Principal (_catalog.md e _catalog.json)
 
 Ler .opp/components/_catalog.md (ou criar se não existir).
+Ler .opp/components/_catalog.json (ou criar se não existir).
 
-Para cada pasta em .opp/components/ (exceto _catalog.md):
+Para cada pasta em .opp/components/ (exceto _catalog.md e _catalog.json):
 - Extrair metadados do component.json:
   - title / versão
   - type (section, widget, etc)
 - Ler audit-report.md se existir → status de auditoria
 - Ler architecture.md se existir → descrição resumida
-- Atualizar linha na tabela do catálogo
+- Atualizar linha na tabela do catálogo (para _catalog.md)
+- Atualizar entrada no registro JSON (para _catalog.json)
 
-Se componente novo → adicionar linha.
+Se componente novo → adicionar linha/entrada.
 Se componente removido → marcar como deprecated (não remover histórico).
 
 ## 2. Gerar Ficha Técnica (technical-spec.md)
@@ -177,16 +180,16 @@ Para cada componente, criar/atualizar .opp/components/{nome}/technical-spec.md c
 
 ---
 
-# Output
+## Output
 
 Três arquivos atualizados:
 1. `.opp/components/_catalog.md` — índice geral para humanos
-2. `.opp/components/components-registry.json` — registro machine-readable para agentes
+2. `.opp/components/_catalog.json` — registro machine-readable para agentes
 3. `.opp/components/{nome-kebab}/technical-spec.md` — ficha individual
 
 ---
 
-# components-registry.json Schema
+# _catalog.json Schema
 
 ```json
 {
@@ -199,8 +202,10 @@ Três arquivos atualizados:
       "type": "string",
       "statusAudit": "string",
       "path": "string",
-      "tokens": ["--pwe-*"],
+      "family": "string",
+      "variant": "string",
       "widgets": ["widgetType"],
+      "dsTokens": ["--pwe-*"],
       "complexity": "low|medium|high"
     }
   ]
@@ -222,6 +227,7 @@ Três arquivos atualizados:
 
 Antes de finalizar:
 - [ ] _catalog.md reflete todos os componentes em .opp/components/
+- [ ] _catalog.json contém entradas machine-readable para todos os componentes
 - [ ] Cada technical-spec.md tem dados consistentes com component.json
 - [ ] Status de auditoria condiz com audit-report.md (se existir)
 - [ ] Versão do Design System referenciada
@@ -232,5 +238,6 @@ Antes de finalizar:
 
 Skill concluída quando:
 - _catalog.md atualizado
+- _catalog.json atualizado
 - technical-spec.md gerado/atualizado para o componente processado
 - Dados consistentes entre catálogo e fichas

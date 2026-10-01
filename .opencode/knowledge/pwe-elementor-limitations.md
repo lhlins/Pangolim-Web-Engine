@@ -52,9 +52,22 @@ frontend. Nao e possivel adicionar classes CSS personalizadas em containers.
 Usar widgets como ancora para seletores estruturais (ex: .ppa-title + .e-con),
 atributos de configuracao (data-settings), ou posicao estrutural (nth-child).
 
+### Wrappers `.e-con-inner` não são contrato DOM
+
+Containers Flexbox do Elementor Free podem renderizar os containers-filhos como
+filhos diretos do `.e-con`, sem `.e-con-inner`. Versão, `content_width` e modo
+interno influenciam esta estrutura. CSS que usa `.e-con-inner` para chegar ao
+grid pode não selecionar nada, sem erro visível.
+
+Correção: inspecionar HTML renderizado após importação. Para grids, aplicar CSS
+no pai e nas células por `.elementor-element-{id}` ou `[data-id="..."]` do
+JSON importado. `:has()` pode delimitar escopo visual, mas não deve descobrir
+pai de layout ou profundidade de wrappers.
+
 ### flex-basis nao gerado
 
 O Elementor Free pode nao gerar flex-basis/width no CSS para containers filhos
+
 de um flex container row, mesmo que o JSON defina width: 50%. Resultado: as
 colunas ficam sem largura explicita e o layout fica imprevisivel.
 
@@ -160,6 +173,47 @@ de re-importar o JSON. Isso preserva as configuracoes sem renormalizacao.
 | Propriedade nao renderizada | Alternativa |
 |---|---|
 | Nenhuma conhecida | — |
+
+---
+
+## html
+
+| Propriedade nao renderizada / comportamento | Alternativa |
+|---|---|
+| HTML inline via propriedade `html` ou `content` | **PROIBIDO** — Usar widgets nativos |
+
+Observacao: O widget HTML do Elementor Free permite inserir HTML arbitrário, mas isso **viola o princípio de componentes editáveis/reutilizáveis** no Pangolim Web Engine.
+
+**Regra obrigatória:**
+- NUNCA usar widget HTML com HTML inline como conteúdo do componente
+- NUNCA usar text-editor com HTML estrutural (muitos tags) como workaround
+- SEMPRE dividir conteúdo em widgets nativos:
+  - heading → títulos (h1-h6)
+  - text → parágrafos, textos simples
+  - button → CTAs, links estilizados
+  - image → imagens, backgrounds
+  - icon → ícones
+  - spacer/divider → espaçamento visual, separadores
+
+Exemplo correto (✅):
+```json
+{
+  "widgets": [
+    {"widgetType": "heading", "settings": {"title": "Título do Hero"}},
+    {"widgetType": "text", "settings": {"editor": "Parágrafo explicativo..."}},
+    {"widgetType": "button", "settings": {"text": "CTA Principal", "link": {"url": "#"}}}
+  ]
+}
+```
+
+Exemplo incorreto (❌ — BLOQUEADO pela validação):
+```json
+{
+  "widgets": [
+    {"widgetType": "html", "settings": {"html": "<section class='hero'><h1>Título</h1><p>Texto...</p><a>CTA</a></section>"}}
+  ]
+}
+```
 
 ---
 

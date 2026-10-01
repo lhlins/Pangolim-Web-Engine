@@ -171,5 +171,17 @@ ou remover gap e usar padding interno.
 Verificar se flex-basis e gerado; se nao, documentar necessidade de CSS
 complementar.
 
+### Validações Críticas de Widgets
+
+NUNCA criar widget HTML com conteúdo HTML inline.
+NUNCA criar apenas um widget text-editor com todo o conteúdo HTML.
+
+Validar obrigatoriamente antes de entregar:
+- JSON não contém widget HTML com propriedade `html` preenchida
+- Componente tem pelo menos 2 widgets nativos (heading, text, button, image, icon, spacer, divider)
+- Nenhum widget usa HTML inline como workaround de estrutura
+
+Se qualquer validação falhar → interromper geração e reportar erro crítico.
+
 Caso algum recurso nao exista no Elementor Free, interrompa a geracao e
 informe o motivo.

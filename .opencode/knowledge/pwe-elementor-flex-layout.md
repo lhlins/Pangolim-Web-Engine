@@ -164,6 +164,10 @@ Ao gerar JSON com containers flex row + wrap:
       usar padding interno
 - [ ] Documentar no blueprint a estrategia de gap escolhida
 - [ ] NENHUM container com content_width como objeto — sempre string "full" ou "boxed"
+- [ ] `width` define desktop. Nunca deixar `width: 100%` nos cards esperando `width_tablet` corrigir desktop.
+- [ ] Validar DOM renderizado antes de escrever CSS: `.e-con-inner` não é wrapper garantido em Flexbox Containers.
+- [ ] Para CSS de grid, selecionar pai e filhos por `.elementor-element-{id}`/`[data-id]` do template importado; não localizar nível de layout por `:has()`.
+
 
 ---
 
