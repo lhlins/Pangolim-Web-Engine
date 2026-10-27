@@ -1,4 +1,4 @@
-﻿# Limitacoes de Flex Layout no Elementor Free
+# Limitacoes de Flex Layout no Elementor Free
 
 Este documento documenta armadilhas conhecidas do flex layout no Elementor
 Free e as solucoes validadas. Deve ser consultado durante build-elementor-structure,
@@ -174,6 +174,6 @@ Ao gerar JSON com containers flex row + wrap:
 ## Referencia cruzada
 
 - `.opencode/knowledge/pwe-elementor-limitations.md` — limitacoes por widget
-- `.opencode/skills/generate-css/SKILL.md` — Container Selector Strategy
-- `.opencode/skills/build-elementor-structure/SKILL.md` — etapa 9 (validacao gap)
+- `.opencode/skills/pwe-generate-css/SKILL.md` — Container Selector Strategy
+- `.opencode/skills/pwe-build-elementor-structure/SKILL.md` — etapa 9 (validacao gap)
 

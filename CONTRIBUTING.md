@@ -31,6 +31,8 @@ Sua contribuição deve seguir rigorosamente os standards da suíte:
 
 Consulte `.opencode/standards/pwe-elementor-free-rules.md` para a lista completa de regras proibidas e permitidas.
 
+As skills descrevem escopo e procedimento; elas não concedem permissões de ferramentas. Permissões reais de leitura, edição, shell e delegação são configuradas nos agentes e em `.opencode/opencode.json`. Não adicione blocos `permissions:` ao frontmatter de `SKILL.md` esperando que o OpenCode aplique essas regras.
+
 ## 4. Governança de Alterações
 
 - **Bugs/Falhas**: Se identificar algo errado na suíte, reporte via `/pwe-improve`. O agente de engenharia de melhoria fará a investigação (Root Cause Analysis) e gerará o plano de correção.

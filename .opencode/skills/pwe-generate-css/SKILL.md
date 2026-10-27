@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-generate-css
 
 description: >
@@ -20,11 +20,6 @@ capabilities:
 - performance
 - accessibility
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 
@@ -83,7 +78,7 @@ Recebe:
 - Classes definidas no Blueprint.
 - Lista de estilos necessários.
 - Padrões obrigatórios: .opencode/standards/pwe-elementor-free-rules.md
-- Inventário de limitações de widgets Elementor Free: .opencode/knowledge/elementor-limitations.md
+- Inventário de limitações de widgets Elementor Free: .opencode/knowledge/pwe-elementor-limitations.md
 
 ---
 
@@ -97,7 +92,7 @@ Antes de gerar qualquer código, analisar:
 - O Elementor Free já possui o recurso necessário?
 - O estilo pode ser configurado diretamente no widget?
 - O Design System já possui a regra?
-- Consultar o inventário de limitações (.opencode/knowledge/elementor-limitations.md) para cada widget no componente. Se o widget não renderizar a propriedade desejada, gerar CSS completo para suprir a lacuna.
+- Consultar o inventário de limitações (.opencode/knowledge/pwe-elementor-limitations.md) para cada widget no componente. Se o widget não renderizar a propriedade desejada, gerar CSS completo para suprir a lacuna.
 Se a resposta for sim, não gerar CSS redundante.
 
 ---
@@ -164,7 +159,7 @@ Utilizar esta organização:
 
 ## Marcadores de Assertividade e Gaps (Obrigatório)
 
-Quando for necessário gerar CSS complementar devido a limitações do Elementor Free (conforme `.opencode/knowledge/elementor-limitations.md`), incluir marcadores explícitos:
+Quando for necessário gerar CSS complementar devido a limitações do Elementor Free (conforme `.opencode/knowledge/pwe-elementor-limitations.md`), incluir marcadores explícitos:
 
 ```css
 /* ⚠️ COMPLEMENTAR: Elementor Free não suporta background_color em text-editor */
@@ -290,7 +285,7 @@ flex row. Quando o componente precisa de colunas com largura fixa (ex:
 Se o blueprint especificou gap via flex_gap, usar o valor do gap no calc.
 Se o blueprint removeu gap e usa padding interno, usar flex-basis: 50%.
 
-Consultar .opencode/knowledge/elementor-flex-layout.md para detalhes.
+Consultar .opencode/knowledge/pwe-elementor-flex-layout.md para detalhes.
 
 Importante: quando necessario usar `!important` para sobrescrever CSS
 inline do Elementor, registrar no relatorio da skill como excecao
@@ -344,8 +339,8 @@ NUNCA usar seletores baseados em `data-id` no CSS complementar.
 Sempre usar widget-ancora + `closest()` / `querySelector()` no JS.
 Sempre injetar classes semanticas que o CSS possa usar.
 
-Consultar .opencode/knowledge/elementor-limitations.md secao
-"_css_classes em containers" e .opencode/skills/build-elementor-structure/SKILL.md.
+Consultar .opencode/knowledge/pwe-elementor-limitations.md secao
+"_css_classes em containers" e .opencode/skills/pwe-build-elementor-structure/SKILL.md.
 
 ---
 

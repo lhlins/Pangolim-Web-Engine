@@ -3,8 +3,8 @@ name: pwe-theme-builder
 
 description: >
   Cria temas filho a partir do Hello Elementor e configura them conforme um Design System fornecido.
-  Gera style.css com tokens CSS custom properties, functions.php para enqueue de estilos,
-  e screenshot placeholder. Aceita Design System como arquivo ou via extração de site de referência.
+  Gera style.css com tokens CSS custom properties e functions.php para enqueue de estilos.
+  Aceita Design System como arquivo ou via extração de site de referência.
 
 version: 1.0.0
 
@@ -36,12 +36,24 @@ handoff:
   - pwe-generate-child-theme
   - pwe-validate-theme
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  internet: false
+permission:
+  external_directory: deny
+  read: allow
+  glob: allow
+  grep: allow
+  edit:
+    "*": deny
+    .opp/themes/**: allow
+  bash:
+    "*": deny
+    "php -l *": allow
+    "node .opencode/skills/pwe-validate-theme/validate-theme.mjs *": allow
+  task:
+    "*": deny
+    pwe-site-analyst: allow
+  skill:
+    "*": deny
+    pwe-*: allow
 
 constraints:
   - Nunca modificar o tema Hello pai
@@ -98,7 +110,6 @@ Obrigatórias:
 Opcionais:
 
 • URL de site de referência (para extração de DS)
-• Preferências de screenshot
 • Configurações adicionais do WordPress (post-formats, etc.)
 
 ---
@@ -114,8 +125,6 @@ Especificação
 style.css (header + tokens CSS)
 ↓
 functions.php (enqueue + theme supports)
-↓
-screenshot.png (placeholder)
 ↓
 Guia de instalação
 ↓
@@ -141,11 +150,11 @@ Gerar style.css
 ↓
 Gerar functions.php
 ↓
-Gerar screenshot placeholder
+Executar validação programática do tema
 ↓
-Validar tema
+Revisão pelo pwe-reviewer
 ↓
-Catalogar
+Catalogar após aprovação
 ↓
 END
 
@@ -202,7 +211,6 @@ Antes de concluir valide:
 □ Sem cores hardcodadas
 □ Compatível com Hello pai
 □ Compatível com Elementor Free
-□ Screenshot placeholder gerado
 □ Documentado
 □ Versionado
 

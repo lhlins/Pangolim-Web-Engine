@@ -34,11 +34,17 @@ handoff:
   - pwe-propose-improvement
   - pwe-generate-improvement-patch
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
+permission:
+  external_directory: deny
+  read: allow
+  glob: allow
+  grep: allow
+  edit: deny
+  bash: deny
+  task: deny
+  skill:
+    "*": deny
+    pwe-*: allow
 
 constraints:
 

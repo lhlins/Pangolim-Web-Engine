@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-generate-js
 
 description: >
@@ -25,11 +25,6 @@ capabilities:
 - performance
 - accessibility
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 

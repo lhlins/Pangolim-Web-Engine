@@ -1,9 +1,10 @@
-﻿---
+---
 name: pwe-compare-sites
 
 description: >
-  Compara dois sites (Site A vs Site B) em nivel estrutural, estilistico,
-  de comportamento, acessibilidade e performance. Gera diff estruturado e
+  Compara evidências disponíveis de dois sites em estrutura e estilos declarados,
+  registrando indícios estáticos de comportamento. Não mede acessibilidade ou performance.
+  Gera diff estruturado e
   recomenda qual abordagem estrutural adotar para componentes no Elementor Free.
 
 version: 1.0.0
@@ -17,14 +18,9 @@ capabilities:
   - structural-diff
   - styling-diff
   - recommendation-engine
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 constraints:
   - Nunca alterar arquivos do projeto
-  - Sempre comparar com base nas 4 dimensoes: Estrutura, Tokens, Comportamento, Performance
+  - Não apresentar WCAG, Core Web Vitals, peso total ou velocidade como medidos nesta skill
   - Toda diferenca deve ser evidenciada com dados de ambos os sites
 ---
 
@@ -71,31 +67,32 @@ Comparar lado a lado:
 - Sombras e elevacao
 - Breakpoints responsivos
 
-## 4. Diff Comportamental (JS & Interacoes)
+## 4. Indícios estáticos de comportamento (JS & Interações)
 
 Comparar:
 - Presenca de animacoes e transicoes
-- Interacoes complexas (carrossel, modal, abas, acordeao)
-- Bibliotecas externas utilizadas
-- Peso de JS/CSS carregado
+- Marcadores de interação visíveis no HTML/CSS recebido (não confirmar funcionamento)
+- Bibliotecas somente se houver marcador explícito na evidência
+- Não estimar ou afirmar peso de JS/CSS sem tamanho de arquivo fornecido pela ferramenta
 
-## 5. Diff Acessibilidade & Performance
+## 5. Limites de acessibilidade & performance
 
 Comparar:
-- Core Web Vitals (LCP, CLS, INP estimados)
-- WCAG 2.1 AA compliance (contraste, aria, labels)
-- Tamanho total da pagina (DOM nodes + assets)
+- Registrar observações estáticas de markup (`alt`, labels, landmarks) como pistas para revisão humana, sem status WCAG
+- Core Web Vitals, velocidade, estabilidade visual e tamanho total: não medidos por esta skill
 
 ## 6. Recomendacao Elementor Free
 
 Para cada divergencia encontrada, decidir:
 - Qual padrao e melhor para o Pangolim Web Engine (considerando Elementor Free + Hello Theme)
 - Qual abordagem estrutural adotar no componente resultante
-- Justificativa tecnica baseada em performance, manutencao e fidelidade visual
+- Justificativa baseada nas evidências estruturais/estéticas e na manutenção; tratar impacto de desempenho como hipótese, não medição
 
 ---
 
 # Output
+
+O exemplo JSON abaixo é um formato, não uma pontuação padrão. Não criar `similarityScore` numérico sem metodologia explícita e dados comparáveis; preferir resumo qualitativo com evidências.
 
 ## Relatório de Comparação
 
@@ -106,17 +103,17 @@ Site B: [URL B]
 Timestamp: [ISO 8601]
 
 === RESUMO EXECUTIVO ===
-Similaridade geral: [X]%
+Padrões coincidentes: [descrição qualitativa com evidência; não calcular percentual]
 Principais diferencas: [resumo em 3 linhas]
 Recomendacao principal: [qual site usar como baseline e por que]
 
 === 1. DIFF ESTRUTURAL (DOM & LAYOUT) ===
 | Dimensao | Site A ([URL A]) | Site B ([URL B]) | Vencedor / Observacao |
 |----------|-------------------|-------------------|------------------------|
-| Profundidade DOM | [N niveis] | [N niveis] | [Avaliacao] |
+| Profundidade do trecho acessível | [contagem observada ou não contada] | [contagem observada ou não contada] | [limite da evidência] |
 | Layout principal | [Flex / Grid] | [Flex / Grid] | [Avaliacao] |
 | Numero de colunas | [N] | [N] | [Avaliacao] |
-| Uso de semantica | [Bom / Medio / Ruim] | [Bom / Medio / Ruim] | [Avaliacao] |
+| Markup semântico visível | [tags observadas] | [tags observadas] | [não é avaliação de conformidade] |
 
 Diferencas detalhadas de estrutura:
 - [Ponto 1]
@@ -141,12 +138,12 @@ Diferencas detalhadas de estilo:
 | Animacoes | [descricao] | [descricao] |
 | Complexidade | [Baixa/Media/Alta] | [Baixa/Media/Alta] |
 
-=== 4. DIFF ACESSIBILIDADE & PERFORMANCE ===
-| Metrica | Site A | Site B | Melhor |
-|---------|--------|--------|--------|
-| LCP estimado | [ms] | [ms] | [...] |
-| CLS estimado | [score] | [score] | [...] |
-| Contraste WCAG | [Pass/Fail] | [Pass/Fail] | [...] |
+=== 4. EVIDÊNCIAS E LIMITES ===
+| Observação estática | Site A | Site B | Limite |
+|---------------------|--------|--------|--------|
+| Markup de acessibilidade visível | [evidência ou não observado] | [evidência ou não observado] | Não é auditoria WCAG |
+| Core Web Vitals | Não medidos | Não medidos | Exige ferramenta de medição |
+| Peso/tempo da página | Não medidos | Não medidos | Exige dados de rede |
 
 === 5. RECOMENDACAO PARA O ELEMENTOR FREE ===
 Abordagem recomendada: [Site A | Site B | Hibrido]
@@ -167,7 +164,7 @@ Estrutura Elementor sugerida:
   "siteA": "https://...",
   "siteB": "https://...",
   "timestamp": "2026-08-14T...",
-  "similarityScore": 78,
+  "comparisonSummary": "[resumo qualitativo apoiado pelos dados comparáveis]",
   "structuralDiff": {
     "domDepth": {"siteA": 12, "siteB": 15},
     "layoutEngine": {"siteA": "flex", "siteB": "grid"}
@@ -192,8 +189,8 @@ Estrutura Elementor sugerida:
 
 Antes de finalizar:
 - [ ] Dados de ambos os sites carregados e validos
-- [ ] Comparacao executada nas 4 dimensoes (estrutura, tokens, comportamento, perf/a11y)
-- [ ] Tabela comparativa preenchida sem lacunas
+- [ ] Comparação limitada a evidências disponíveis; ausências marcadas como não observadas/não medidas
+- [ ] Nenhuma métrica WCAG/performance inventada para preencher a tabela
 - [ ] Recomendacao final justificada tecnicamente para o contexto Elementor Free
 
 ---
@@ -202,5 +199,5 @@ Antes de finalizar:
 
 Skill concluida quando:
 - Relatorio comparativo formatado entregue
-- JSON de diff salvo
+- JSON de diff salvo somente quando a gravação realmente ocorreu; caso contrário declarar que não foi salvo
 - Recomendacao tecnica clara emitida

@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-catalog-component
 
 description: |
@@ -16,11 +16,6 @@ parent_agent: pwe-elementor-architect
 
 temperature: 0.0
 
-permissions:
-  read: true
-  write: true
-  edit: true
-  bash: false
 
 constraints:
   - Nunca alterar arquitetura.
@@ -102,7 +97,7 @@ Para cada componente, criar/atualizar .opp/components/{nome}/technical-spec.md c
 # Ficha Técnica: {Nome do Componente}
 
 **Versão:** {versão do component.json}
-**Status Auditoria:** {Aprovado | Aprovado com ressalvas | Reprovado | Pendente | Entregue com ressalvas}
+**Status Auditoria:** {Aprovado | Aprovado com ressalvas | Reprovado | Pendente | Bloqueado}
 **Última atualização:** {ISO 8601}
 **Design System:** {versão do DS usado}
 **Engine:** Pangolim Web Engine
@@ -216,7 +211,8 @@ Três arquivos atualizados:
 
 # Rules
 
-- Executar APÓS aprovação final do Review Loop (status APROVADO ou iteração 3 com ressalvas)
+- Executar somente após aprovação final do Review Loop (`APROVADO`, sem Critical ou Warning pendente)
+- Não executar a catalogação para componente com status `REPROVADO` ou `BLOQUEADO`; o relatório de revisão registra o bloqueio
 - Não executar durante desenvolvimento, apenas na etapa final de catalogação
 - Sempre preservar histórico de versões na ficha técnica
 - Marcar componentes deprecated se pasta removida (não apagar do catálogo)

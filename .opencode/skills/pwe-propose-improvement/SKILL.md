@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-propose-improvement
 
 description: >
@@ -24,11 +24,6 @@ capabilities:
 - prompt-engineering
 - process-improvement
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 

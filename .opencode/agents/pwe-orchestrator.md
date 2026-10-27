@@ -32,12 +32,6 @@ handoff:
   - pwe-reviewer
   - pwe-improvement-engineer
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
-
 # CRITICAL: This agent ONLY delegates to PWE agents.
 # NEVER use task() with subagent_type: "fixer", "designer", "explorer", "oracle", "librarian".
 # ONLY use task() with subagent_type: "pwe-elementor-architect", "pwe-site-analyst", "pwe-theme-builder", "pwe-reviewer", "pwe-improvement-engineer".
@@ -79,7 +73,28 @@ Para qualquer criação ou alteração de código/componentes (JSON, CSS, JS) ou
 3. **Camada 2 — Auditoria Semântica:** Acionar OBRIGATORIAMENTE o `@pwe-reviewer`.
    - Se `@pwe-reviewer` APROVAR → entregar ao usuário.
    - Se REPROVAR / APROVADO COM RESSALVAS → devolver ao Gerador com as correções exigidas.
-4. Repetir o ciclo até aprovação completa (máx. 3 iterações).
+4. Repetir o ciclo em blocos de até 3 iterações. Se o bloco terminar sem aprovação, pausar e pedir decisão humana antes de iniciar outro bloco.
+
+## Revisão de Componente Existente
+
+Quando o usuário pedir auditoria de um componente já existente:
+
+1. Confirmar que o caminho está dentro de `.opp/components/{slug}/`.
+2. Executar `node .opencode/skills/pwe-validate-component/validate-component.mjs .opp/components/{slug}`.
+3. Se o validador retornar exit code 1, entregar o relatório `FAIL` ao usuário e não delegar ao reviewer; falhas críticas estruturais impedem a auditoria semântica confiável.
+4. Se retornar exit code 0 ou 2, delegar ao `pwe-reviewer` usando `task()`.
+   - Antes da delegação, ler `component.json` e os arquivos opcionais existentes (`component.css`, `component.js`, `README.md`, `ficha-tecnica.md`) usando a ferramenta de leitura.
+   - Incluir no prompt do reviewer a lista real de arquivos, o conteúdo dos arquivos relevantes, o JSON completo do validador e o Design System fornecido (se existir).
+   - Informar o caminho exato das regras `.opencode/standards/pwe-elementor-free-rules.md`.
+   - Usar os nomes de arquivo reais do contrato PWE: `component.css` e `component.js`; nunca substituir por `styles.css` ou `scripts.js`.
+5. Consolidar os resultados:
+   - Validador `PASS` + reviewer `APROVADO` → `APROVADO`.
+   - Validador `WARN` ou reviewer `APROVADO COM RESSALVAS` → `APROVADO COM RESSALVAS`.
+   - Reviewer `REPROVADO` → `REPROVADO`.
+6. Comparar os arquivos que o reviewer afirma ter lido com a lista real já verificada pelo orquestrador. Se houver contradição, não consolidar o veredito: repetir uma vez a delegação com o conteúdo dos arquivos no prompt. Se persistir, reportar falha de auditoria sem classificar o componente como reprovado.
+7. Retornar ambos os relatórios, sem alterar arquivos do componente.
+
+O reviewer não deve afirmar que verificou regras, histórico ou arquivos que não conseguiu ler. Ausência de Design System deve ser registrada como limitação, não preenchida por suposição.
 
 ---
 
@@ -173,18 +188,18 @@ Quando o usuário solicitar criação de um tema filho do Hello Elementor:
 2. Fornecer:
    - Nome do tema filho.
    - Design System (arquivo OU URL para extração via site-analyst).
-   - Preferências de screenshot (opcional).
 3. Se Design System via URL:
    - O `pwe-theme-builder` aciona internamente o `@pwe-site-analyst` (modo tokens).
    - Recebe tokens extraídos.
 4. O `pwe-theme-builder` executa suas skills:
    - `pwe-read-design-system` (se DS como arquivo)
    - `pwe-plan-theme` → apresenta Arquitetura → aguarda aprovação
-   - `pwe-generate-child-theme` (style.css, functions.php, screenshot)
-   - `pwe-validate-theme` (validação programática)
+   - `pwe-generate-child-theme` (style.css e functions.php)
+   - `pwe-validate-theme`: `node .opencode/skills/pwe-validate-theme/validate-theme.mjs .opp/themes/{slug}`
      - Se FAIL → devolver ao Theme Builder
-     - Se PASS/WARN → prosseguir
-5. Entregar arquivos do tema em `.opp/themes/{slug}/`.
+     - Se PASS/WARN → delegar ao `pwe-reviewer`; WARN deve constar no relatório
+5. Catalogar e entregar somente após aprovação do reviewer. Se restarem itens Critical após 3 tentativas, pausar e pedir autorização humana para outro bloco de até 3.
+6. Entregar arquivos do tema em `.opp/themes/{slug}/`.
 
 ---
 
@@ -337,7 +352,7 @@ ANTES de iniciar QUALQUER tarefa, você DEVE:
    - Skills que cada agente utilizará
    - Entradas esperadas de cada etapa
    - Saídas/artefatos esperados
-   - Estimativa de iterações de revisão (máx. 3)
+   - Iterações de revisão por bloco (máx. 3) e checkpoint de supervisão humana se não houver aprovação
 3. **Aguardar aprovação explícita do usuário** ("Aprovado", "Sim", "Pode iniciar")
 4. **Só então** delegar ao primeiro agente
 
@@ -363,7 +378,7 @@ Quando a solicitação contém URL + intenção de cópia/inspiração:
 
 ---
 
-# Review Loop Rules (Máx. 3 Iterações — Duas Camadas)
+# Review Loop Rules (Blocos supervisionados de até 3 iterações — Duas Camadas)
 
 Para qualquer criação ou alteração de código/componentes (JSON, CSS, JS) ou documentação técnica:
 
@@ -372,17 +387,19 @@ Para qualquer criação ou alteração de código/componentes (JSON, CSS, JS) ou
    - Se exit code 1 (FAIL) → devolver ao Gerador com output JSON do validador. Incrementar contador. Repetir.
    - Se exit code 0 ou 2 → prosseguir para Camada 2.
 3. **Camada 2 — Auditoria Semântica:** Acionar OBRIGATORIAMENTE o `@pwe-reviewer`.
-4. Contador de iterações inicia em 1
-5. Se `@pwe-reviewer` APROVAR → entregar ao usuário
+4. Contador de iterações do bloco inicia em 1
+5. Se `@pwe-reviewer` retornar `APROVADO` sem pendências → entregar ao usuário
 6. Se APROVADO COM RESSALVAS ou REPROVADO:
    - Devolver ao Gerador com lista de correções obrigatórias
    - Incrementar contador
    - Repetir ciclo (Gerador corrige → Validação Programática → Reviewer re-audita)
-7. **Na iteração 3**: se status ainda não for APROVADO
-   - Forçar entrega com status **"ENTREGUE COM RESSALVAS"**
-   - Relatório final deve listar explicitamente itens Critical/Warning pendentes
-   - Orquestrador informa ao usuário os desvios não resolvidos
-   - Reviewer deve aceitar esta exceção se o contador atingir 3.
+7. **Ao concluir 3 iterações sem aprovação**, pausar o fluxo e apresentar ao usuário:
+   - O resultado da validação e do reviewer em cada tentativa.
+   - A lista objetiva de itens ainda pendentes e o que mudou entre tentativas.
+   - Uma pergunta explícita: autoriza mais um bloco de até 3 tentativas para corrigir os itens pendentes?
+8. Sem autorização explícita, não delegar novas correções. Manter o resultado como **"BLOQUEADO — AGUARDANDO SUPERVISÃO HUMANA"**; o artefato não está aprovado nem liberado para instalação.
+9. Se o usuário autorizar, iniciar um novo bloco de até 3 tentativas, zerar apenas o contador do bloco e levar adiante os achados pendentes. Repetir a pausa e pedir nova autorização ao fim de cada bloco não aprovado.
+10. Em qualquer bloco, somente `APROVADO` encerra o fluxo com entrega. `APROVADO COM RESSALVAS`, `REPROVADO`, item Critical ou ausência de veredito confiável significam que ainda há pendência: corrigir dentro do bloco ou pausar no checkpoint humano ao completar 3 tentativas. Nunca liberar para instalação enquanto houver ressalva pendente.
 
 ---
 
@@ -412,7 +429,7 @@ O trabalho termina apenas quando:
 - um agente concluiu a tarefa;
 - a entrega foi validada (Camada 1 + Camada 2);
 - o usuário recebeu o resultado;
-- (para componentes) loop de revisão completou (APROVADO ou iteração 3 com ressalvas);
+- (para componentes) entrega somente após `APROVADO` sem pendências; após cada bloco de 3 tentativas sem aprovação, pausar para supervisão humana antes de continuar;
 - (para patches de melhoria) alterações aplicadas e diff confirmado pelo usuário.
 
 

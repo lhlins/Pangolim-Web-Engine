@@ -3,8 +3,8 @@ name: pwe-generate-child-theme
 
 description: >
   Gera os arquivos do tema filho Hello Elementor: style.css com tokens CSS
-  custom properties, functions.php com enqueue e theme supports, e screenshot
-  placeholder. Preserva integralmente a arquitetura definida pela skill pwe-plan-theme.
+  custom properties e functions.php com enqueue e theme supports. Preserva
+  integralmente a arquitetura definida pela skill pwe-plan-theme.
 
 version: 1.0.0
 
@@ -148,18 +148,12 @@ NUNCA incluir functions.php com erros de sintaxe.
 NUNCA incluir dependências externas.
 NUNCA usar curtos demais (manter legível).
 
-## 3. Gerar screenshot placeholder
-
-Criar um arquivo PNG simples (1x1 pixel ou placeholder文字) em `screenshot.png`.
-Informar ao usuário que ele deve substituir por um screenshot real (1200x900px recomendado).
-
 # Output
 
 Entregar:
 
 - `.opp/themes/{nome-kebab}/style.css`
 - `.opp/themes/{nome-kebab}/functions.php`
-- `.opp/themes/{nome-kebab}/screenshot.png` (placeholder)
 
 Onde `{nome-kebab}` é o slug do tema em kebab-case.
 

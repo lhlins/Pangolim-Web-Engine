@@ -1,37 +1,44 @@
-﻿---
+---
 name: pwe-sync-tokens-to-ds
-description: |
-  Compara tokens extraídos via análise de site com o DS atual (`design-system.tokens.json`).
-  Propõe atualizações para o DS caso existam discrepâncias ou novos padrões.
+description: Compara tokens extraídos com um Design System fornecido e propõe mudanças sem editar a fonte.
 version: 1.0.0
 author: Pangolim Criativo
 engine: Pangolim Web Engine
 parent_agent: pwe-site-analyst
 temperature: 0.0
-
-permissions:
-  read: true
-  write: true
-  edit: false
-  bash: true
-
 constraints:
-  - Nunca atualizar o design system sem aprovação explícita.
-  - Apenas gera relatório de proposta de atualização.
+  - Nunca atualizar nem substituir o Design System.
+  - Não presumir uma localização padrão de Design System.
+  - Sem tokens ou DS acessíveis, pedir o conteúdo necessário ou declarar a análise incompleta.
+  - Relatar apenas diferenças demonstráveis a partir das duas fontes recebidas.
 ---
 
 # Mission
-Sincronizar os dados extraídos de sites externos (via `site-analyst`) com a nossa fonte de verdade (`docs/design-system.tokens.json`), identificando discrepâncias ou novas oportunidades de design tokens.
 
----
+Comparar o relatório/JSON de tokens observado com um Design System que o usuário forneça ou indique por caminho dentro do checkout PWE. O repositório não contém um DS canônico neste momento; não procurar um arquivo presumido como `docs/design-system.tokens.json`.
+
+# Inputs
+
+- Conteúdo ou caminho de um relatório/JSON de tokens disponível em `.opp/analysis/`.
+- Conteúdo do Design System fornecido pelo usuário, ou arquivo informado que esteja dentro da raiz PWE.
+- Se algum dos dois inputs estiver ausente, não inventar valores nem status `MATCH`, `UPDATE` ou `NEW`.
 
 # Process
-1. Ler `docs/design-system.tokens.json`.
-2. Ler JSON bruto da última análise (ex: `.opp/analysis/site-analysis-*.json`).
-3. Calcular DIFF:
-   - Tokens existentes com valores diferentes.
-   - Novos tokens detectados (ex: nova cor não catalogada).
-   - Espaçamentos ou breakpoints divergentes.
-4. Gerar `tokens-diff-report.md`.
-5. Propor atualização estruturada.
 
+1. Confirmar que ambos os conteúdos necessários estão disponíveis e identificar formato/origem.
+2. Comparar nomes e valores de tokens: igualdade (`MATCH`), nome existente com valor diferente (`CONFLICT`) ou token ausente no DS (`PROPOSAL`).
+3. Distinguir tokens observados no CSS de tokens inferidos/normalizados.
+4. Registrar limitações e campos que não puderam ser comparados.
+5. Produzir uma proposta em `.opp/analysis/tokens-diff-report-[timestamp].md` quando a gravação estiver disponível; caso contrário, retornar o relatório na resposta e declarar que não foi salvo.
+6. Aguardar aprovação humana antes de qualquer pessoa alterar o Design System. Esta skill nunca aplica propostas.
+
+# Output
+
+Relatório com fontes usadas, tabela `token | valor observado | valor no DS | status | evidência`, itens não comparáveis e propostas. Não prometer JSON ou diff de máquina sem realmente criar esses arquivos.
+
+# Completion Criteria
+
+- As duas fontes e suas origens foram identificadas.
+- Cada comparação tem evidência, ou foi marcada como não comparável.
+- Nenhum arquivo do Design System foi alterado.
+- A proposta foi salva ou a impossibilidade de salvá-la foi declarada.

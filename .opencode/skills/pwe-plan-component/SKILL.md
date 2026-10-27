@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-plan-component
 
 description: >
@@ -16,11 +16,6 @@ parent_agent: pwe-elementor-architect
 
 temperature: 0.1
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
   - Nunca alterar arquitetura.

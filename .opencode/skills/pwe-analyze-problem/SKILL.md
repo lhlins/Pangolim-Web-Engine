@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-analyze-problem
 
 description: >
@@ -21,11 +21,6 @@ capabilities:
 - problem-classification
 - technical-analysis
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 

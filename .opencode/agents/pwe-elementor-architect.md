@@ -42,12 +42,21 @@ handoff:
   - pwe-generate-js
   - pwe-catalog-component
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
-  internet: true
+permission:
+  external_directory: deny
+  read: allow
+  glob: allow
+  grep: allow
+  edit:
+    "*": deny
+    .opp/components/**: allow
+  bash: deny
+  task: deny
+  skill:
+    "*": deny
+    pwe-*: allow
+  webfetch: allow
+  websearch: allow
 
 constraints:
 

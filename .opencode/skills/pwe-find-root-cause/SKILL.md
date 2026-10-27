@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-find-root-cause
 
 description: >
@@ -24,11 +24,6 @@ capabilities:
 - systems-thinking
 - workflow-analysis
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 

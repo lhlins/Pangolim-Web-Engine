@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-analyze-site-structure
 
 description: >
@@ -16,11 +16,6 @@ capabilities:
   - html-analysis
   - semantic-analysis
   - layout-detection
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 constraints:
   - Nunca gerar JSON Elementor
   - Nunca decidir arquitetura de componente
@@ -29,27 +24,26 @@ constraints:
 
 # Mission
 
-Parsear o HTML de um site (fetch ou arquivo local) e produzir uma arvore estruturada
-da hierarquia DOM, identificando containers, layouts, componentes visuais e semantica,
-traduzindo tudo para o vocabulário do Elementor Free.
+Inspecionar HTML disponível via `webfetch` ou fornecido pelo usuário e resumir a estrutura aparente para o vocabulário do Elementor Free. Não há parser DOM executável nesta skill; paths e seletores são aproximações inferidas do texto recebido.
 
 ---
 
 # Inputs
 
-- URL do site (obrigatorio) OU HTML bruto fornecido pelo usuario
+- URL consultada com a ferramenta `webfetch` (se disponível) OU HTML bruto fornecido pelo usuário
 - Modo: "full" (pagina inteira) | "section" (seletor CSS/XPath especifico)
 
 ---
 
 # Process
 
-## 1. Fetch & Parse
+## 1. Obter e inspecionar evidências
 
-- Fetch URL com timeout 15s, seguir redirects (max 5)
-- Verificar Content-Type text/html
-- Parsear HTML em arvore DOM (usar parser tolerante a erros)
-- Extrair tambem: <head> (meta tags, links CSS/JS, title, viewport)
+- Para URL, usar `webfetch` quando disponível e registrar exatamente o que retornou.
+- Não afirmar status HTTP, timeout, redirects, Content-Type ou fetch de HTML bruto se a ferramenta não exibir esses dados.
+- Para HTML fornecido, analisar somente o trecho recebido.
+- Inspecionar `<head>` apenas se estiver presente no conteúdo.
+- Se a resposta for resumida, incompleta ou não contiver HTML, declarar análise parcial e não inventar árvore DOM.
 
 ## 2. Identificar Containers Principais
 
@@ -65,8 +59,8 @@ Percorrer DOM e classificar cada no container-like:
 Para cada container detectado, registrar:
 - Seletor CSS unico (path from body)
 - Tipo inferido (section/container/grid/wrapper)
-- display computed (flex/grid/block)
-- flex-direction / grid-template-columns (se inline style ou class Tailwind/Bootstrap)
+- `display` declarado inline ou identificado em CSS fornecido; nunca chamar de computed
+- `flex-direction` / `grid-template-columns` somente quando houver declaração explícita no conteúdo
 - gap (se detectado)
 - width/max-width constraints
 - Padding/margin significativos
@@ -128,7 +122,7 @@ Para cada container flex/grid:
 - Numero de filhos diretos
 - Distribuicao de largura dos filhos (%, px, fr, auto)
 
-## 7. Responsividade (Heuristica)
+## 7. Responsividade (indícios estáticos)
 
 Procurar:
 - Media queries no CSS inline/linked (extrair breakpoints)
@@ -140,7 +134,11 @@ Procurar:
 
 # Output
 
+Os dados ilustrativos abaixo são apenas formato. Não reutilizar como achados; substituir por valores com evidência ou marcar `não observado`.
+
 ## Relatorio Texto (para agente)
+
+Este é um formato de relatório, não uma garantia de parsing. Preencher somente campos evidenciados no HTML/CSS recebido. Em cada path/seletor, marcar `observado` ou `inferido`; deixar `não observado` quando o conteúdo não sustentar conclusão.
 
 \\\
 ESTRUTURA DOM - [URL]
@@ -148,7 +146,7 @@ Timestamp: [ISO 8601]
 
 === CONTAINERS PRINCIPAIS ===
 1. [seletor] - Tipo: [section|container|grid|wrapper]
-   Display: [flex|grid|block] | Direction: [row|col] | Wrap: [wrap|nowrap]
+   Display declarado/indício: [valor ou não observado] | Direction: [valor ou não observado] | Wrap: [valor ou não observado]
    Gap: [valor] | Children: [N] | Width: [constraint]
    Padding: [valores] | Margin: [valores]
    Classes: [lista]
@@ -166,7 +164,7 @@ h1: "[texto]" (seletor)
 header: [seletor] | nav: [seletor] | main: [seletor] | footer: [seletor]
 
 === LAYOUTS FLEX/GRID ===
-[container seletor]: direction=[row|col] wrap=[wrap|nowrap] gap=[X] children=[N]
+   [container seletor]: direction=[observada/inferida/não observada] wrap=[observado/inferido/não observado] gap=[X/não observado] children=[contagem do trecho]
   Child 1: width=[%] | Child 2: width=[%] ...
 
 === RESPONSIVIDADE ===
@@ -215,10 +213,17 @@ Viewport meta: [content]
 
 ---
 
+## Limites de interpretação
+
+- Não há execução de JavaScript nem renderização de navegador.
+- Não calcular estilos computados nem afirmar layout responsivo efetivo.
+- Classes como `md:grid` são indícios de convenção, não prova de que a classe esteja definida ou carregada.
+- Rotular cada path/seletor como inferido quando não puder ser localizado literalmente no HTML.
+
 # Validation
 
 Antes de finalizar:
-- [ ] HTML parseado sem erros fatais
+- [ ] Fonte e limites do conteúdo analisado declarados
 - [ ] Pelo menos 1 container principal identificado
 - [ ] Widgets mapeados para tipos Elementor Free validos
 - [ ] Seletores CSS unicos para cada no reportado
@@ -230,5 +235,5 @@ Antes de finalizar:
 
 Skill concluida quando:
 - Relatorio texto entregue ao agente
-- JSON bruto salvo
-- Nenhum container/widget sem seletor unico
+- JSON salvo somente quando a gravação realmente ocorreu; caso contrário declarar que não foi salvo
+- Paths/selectors distinguem evidência literal de inferência

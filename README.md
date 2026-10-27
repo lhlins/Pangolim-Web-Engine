@@ -1,6 +1,6 @@
 # Pangolim Web Engine
 
-Suíte de geração de componentes reutilizáveis para **WordPress + Elementor Free + tema Hello**. Produz JSON, CSS e JS importáveis, além de ferramentas de análise de sites de referência e auditoria técnica.
+Suíte de agentes e skills para planejar, gerar e revisar componentes de **WordPress + Elementor Free + tema Hello**. O checkout atual salva artefatos dentro de `.opp/` neste repositório.
 
 ---
 
@@ -22,13 +22,15 @@ Esta suíte atende o fluxo técnico de produção de componentes para sites Word
 ```
 Pangolim-Web-Engine/
 ├── .opencode/
-│   ├── agents/                              # 5 agentes (prefixo pwe-*)
+│   ├── agents/                              # 6 agentes (prefixo pwe-*)
 │   │   ├── pwe-orchestrator.md              # Orquestrador + roteamento
 │   │   ├── pwe-elementor-architect.md       # Arquiteto de componentes
 │   │   ├── pwe-site-analyst.md              # Analista de sites referência
 │   │   ├── pwe-reviewer.md                  # Gatekeeper (auditoria)
-│   │   └── pwe-improvement-engineer.md      # Melhoria contínua
-│   ├── skills/                              # 18 skills (prefixo pwe-*)
+│   │   ├── pwe-improvement-engineer.md      # Melhoria contínua
+│   │   └── pwe-theme-builder.md             # Construtor de temas filho
+│   ├── commands/                            # pwe-component, pwe-theme, pwe-analyze, pwe-review, pwe-improve
+│   ├── skills/                              # 21 skills (prefixo pwe-*)
 │   │   ├── pwe-generate-elementor-json/     # JSON Elementor
 │   │   ├── pwe-generate-css/                # CSS com tokens --pwe-*
 │   │   ├── pwe-generate-js/                 # JavaScript isolado
@@ -46,7 +48,10 @@ Pangolim-Web-Engine/
 │   │   ├── pwe-analyze-problem/             # Análise de erro
 │   │   ├── pwe-find-root-cause/             # Causa raiz
 │   │   ├── pwe-propose-improvement/         # Proposta estrutural
-│   │   └── pwe-generate-improvement-patch/  # Patch gerado
+│   │   ├── pwe-generate-improvement-patch/  # Patch gerado
+│   │   ├── pwe-plan-theme/                  # Arquitetura de tema
+│   │   ├── pwe-generate-child-theme/        # Arquivos do tema filho
+│   │   └── pwe-validate-theme/              # Validador executável de tema
 │   ├── standards/
 │   │   └── pwe-elementor-free-rules.md      # Regras técnicas obrigatórias
 │   ├── knowledge/
@@ -71,20 +76,20 @@ Interpreta a solicitação do usuário, seleciona o agente especializado, **list
 
 ### `pwe-elementor-architect` — Arquiteto de componentes
 **Tipo:** Architect  
-**Saída:** `.opp/components/{nome-kebab}/` (JSON + CSS + JS + docs)
+**Saída:** `.opp/components/{nome-kebab}/` neste repositório (JSON + CSS + JS + docs)
 
 Transforma conteúdo em componente Elementor Free reutilizável. Workflow: Selecionar DS → Ler DS → Solicitar conteúdo → Planejar → Wireframe → **Aprovação** → Gerar JSON → Gerar CSS → Gerar JS → Validação Programática → Auditoria (Reviewer) → Catalogar.
 
 ### `pwe-site-analyst` — Analista de sites
 **Tipo:** Architect  
-**Saída:** `.opp/analysis/` (relatórios + JSON bruto)
+**Saída:** `.opp/analysis/` neste repositório (relatórios + JSON bruto)
 
-Faz fetch de URLs, extrai DOM/CSS/JS, identifica bibliotecas, extrai tokens de design compatíveis com `--pwe-*`, compara dois sites lado a lado, audita acessibilidade (WCAG 2.1 AA) e performance (Core Web Vitals).
+Analisa evidências acessíveis de sites de referência, estrutura e estilos, identifica padrões e propõe tokens `--pwe-*`. Acessibilidade e performance só podem ser relatadas como medidas quando houver ferramentas de medição disponíveis; caso contrário, são inferências declaradas.
 
 ### `pwe-reviewer` — Gatekeeper
 **Tipo:** Reviewer (poder de bloqueio)
 
-Audita JSON/CSS/JS/Docs contra `pwe-elementor-free-rules.md` e o Design System. Emite relatório com status: **APROVADO** | **APROVADO COM RESSALVAS** | **REPROVADO**. Bloqueia entrega se houver item Critical.
+Audita JSON/CSS/JS/Docs contra `pwe-elementor-free-rules.md` e o Design System. Emite relatório com status: **APROVADO** | **APROVADO COM RESSALVAS** | **REPROVADO**. A entrega final exige **APROVADO** sem pendências; ressalvas e falhas críticas bloqueiam a instalação.
 
 ### `pwe-improvement-engineer` — Engenheiro de melhoria
 **Tipo:** Improvement
@@ -93,7 +98,7 @@ Analisa erros detectados, identifica causa raiz (pergunta "por quê?" até a ori
 
 ### `pwe-theme-builder` — Construtor de temas filho
 **Tipo:** Architect  
-**Saída:** `.opp/themes/{slug}/` (`style.css` + `functions.php` + `screenshot.png`)
+**Saída:** `.opp/themes/{slug}/` neste repositório (`style.css` + `functions.php`). Screenshot é opcional e não é gerado pelo checkout.
 
 Cria temas filho a partir do Hello Elementor configurados com tokens CSS custom properties do Design System fornecido (arquivo ou extração de site de referência). Workflow: Receber DS → Ler/Extrair DS → Planejar tema → Aprovação → Gerar `style.css` → Gerar `functions.php` → Validação Programática → Catalogar.
 
@@ -103,27 +108,29 @@ Cria temas filho a partir do Hello Elementor configurados com tokens CSS custom 
 
 Para qualquer tarefa, o `pwe-orchestrator` segue este fluxo:
 
-1. **Listar pipeline completo** — agentes + skills + entradas + saídas + iterações máx. 3
+1. **Listar pipeline completo** — agentes + skills + entradas + saídas + até 3 iterações por bloco e checkpoints humanos
 2. **Apresentar ao usuário** — esperar aprovação explícita ("Aprovado", "Sim", "Pode iniciar")
 3. **Delegar** ao primeiro agente
 4. **Receber entrega** do agente gerador
 5. **Acionar `pwe-reviewer`** — gatekeeper obrigatório
-6. **Loop de revisão** (máx. 3 iterações): APROVADO → entregar / REPROVADO → devolver ao gerador
-7. **Iteração 3 sem aprovação** → entregar com status "ENTREGUE COM RESSALVAS" + relatório de desvios
+6. **Loop de revisão** em blocos de até 3 tentativas: corrigir e revalidar conforme o veredito do reviewer
+7. **Somente `APROVADO`** encerra com entrega; qualquer Warning ou Critical pendente volta para correção
+8. **Sem aprovação após 3 tentativas**: pausar como `BLOQUEADO — AGUARDANDO SUPERVISÃO HUMANA` e apresentar pendências
+9. Só iniciar mais 3 tentativas após autorização explícita do usuário. Repetir o checkpoint a cada bloco até a correção ser aprovada ou o usuário encerrar.
 
 ---
 
-## Comandos Globais (`pwe-*`)
+## Comandos de Projeto (`/pwe-*`)
 
-Todos os comandos operam no CWD do projeto. O caminho pode ser passado como argumento.
+Os comandos ficam em `.opencode/commands/` e são carregados pelo OpenCode quando iniciado na raiz do Pangolim Web Engine. Os artefatos são gravados neste repositório, sob `.opp/`. O checkout atual não grava diretamente na pasta de um site WordPress externo.
 
 | Comando | Uso | Descrição |
 |---------|-----|-----------|
-| `/pwe-component` | `/pwe-component [pasta-projeto] "Hero com CTA" [--ref URL] [--ds design-system.md]` | Cria componente via `pwe-orchestrator` → `pwe-elementor-architect` → `pwe-reviewer` |
-| `/pwe-theme` | `/pwe-theme [pasta-projeto] "meu-tema-filho" [--ds design-system.md \| --url URL]` | Cria tema filho Hello Elementor via `pwe-orchestrator` → `pwe-theme-builder` → `pwe-reviewer` |
-| `/pwe-analyze` | `/pwe-analyze [pasta-projeto] --url https://site.com [--compare https://outro.com] [--tokens]` | Analisa site(s) via `pwe-site-analyst` |
-| `/pwe-review` | `/pwe-review [pasta-projeto] [caminho-componente]` | Audita componente existente via `pwe-reviewer` |
-| `/pwe-improve` | `/pwe-improve [pasta-projeto] "descrição do erro"` | Aciona `pwe-improvement-engineer` para root cause + proposta |
+| `/pwe-component` | `/pwe-component "Hero com CTA" [--ref URL] [--ds design-system.md]` | Planeja e gera componente via orquestrador e arquiteto |
+| `/pwe-theme` | `/pwe-theme "tema-filho" [--ds design-system.md \| --url URL]` | Planeja e gera arquivos de tema via orquestrador e theme builder |
+| `/pwe-analyze` | `/pwe-analyze --url https://site.com [--compare URL] [--tokens]` | Analisa evidências de site(s) via `pwe-site-analyst` |
+| `/pwe-review` | `/pwe-review .opp/components/{slug}` | Executa validador e auditoria semântica de componente existente |
+| `/pwe-improve` | `/pwe-improve "descrição do erro"` | Aciona análise de causa raiz e proposta de patch; não aplica sem aprovação |
 
 ---
 
@@ -132,8 +139,8 @@ Todos os comandos operam no CWD do projeto. O caminho pode ser passado como argu
 ### Fluxo Padrão — Criar Componente
 
 ```bash
-# 1. Entrar na pasta do projeto WordPress
-cd "\\wsl.localhost\Ubuntu\home\luislins\projects\ppa-site"
+# 1. Entrar na raiz deste repositório
+cd ~/Pangolim-Web-Engine
 
 # 2. Abrir opencode nessa pasta
 opencode
@@ -145,9 +152,10 @@ opencode
 **O que acontece:**
 1. `pwe-orchestrator` lista o pipeline e espera aprovação
 2. `pwe-elementor-architect` lê o DS, planeja o componente, gera wireframe, espera aprovação da arquitetura
-3. Gera JSON, CSS, JS em `.opp/components/card-de-produto-com-carousel/`
+3. Gera JSON, CSS e JS em `.opp/components/card-de-produto-com-carousel/` dentro do repositório PWE
 4. `pwe-reviewer` audita contra `pwe-elementor-free-rules.md`
-5. Se aprovado → entrega. Se reprovado → loop de correção (máx. 3x)
+5. Só `APROVADO`, sem Warning ou Critical pendente, encerra com entrega.
+6. Sem aprovação após 3 tentativas → pausar, listar pendências e pedir autorização humana para mais um bloco de até 3. Sem autorização, permanece `BLOQUEADO` e não pode ser instalado.
 
 ### Análise de Site de Referência
 
@@ -181,8 +189,7 @@ Componentes são salvos em `.opp/components/{nome-kebab}/`:
 ├── themes/
 │   └── meu-tema-filho/
 │       ├── style.css              # Header WP + Tokens CSS
-│       ├── functions.php          # Enqueue + Theme Supports
-│       └── screenshot.png         # Placeholder
+│       └── functions.php          # Enqueue + Theme Supports
 ├── analysis/
 │   ├── site-analysis-com-20260101.json
 │   └── site-compare-a-b-20260101.json
@@ -250,71 +257,34 @@ Comandos e workflows para testar componentes localmente via DDEV.
 
 ---
 
-## Instalação em Outro Computador
+## Instalação e Escopo de Execução
 
 ### Pré-requisitos
 
 - **OpenCode CLI** instalado (https://opencode.ai)
-- **Node.js 18+** (para o validador `pwe-validate-component/validate-component.mjs`)
+- **Node.js 18+** (para os validadores de componente e tema)
+- **PHP CLI** (necessário para o check de sintaxe `php -l` do validador de tema)
 - **DDEV** (opcional, para testes locais)
-- **Acesso ao projeto WordPress** com Elementor Free + tema Hello
+- **Acesso a um projeto WordPress** com Elementor Free + tema Hello, quando for instalar os artefatos gerados
 
-### Passo 1 — Copiar a Suíte
+### Passo 1 — Obter a Suíte
 
-Copie `Pangolim-Web-Engine/` para um local permanente (ex.: `~/Pangolim-Web-Engine/`).
+Clone ou copie este repositório para um local permanente (ex.: `~/Pangolim-Web-Engine/`).
 
-### Passo 2 — Registrar Agents Globalmente
+### Passo 2 — Iniciar na raiz do PWE
 
-Edite `~/.config/opencode/opencode.json` e adicione:
-
-```json
-{
-  "agent": {
-    "pwe-orchestrator": {
-      "description": "Orquestrador do Pangolim Web Engine.",
-      "mode": "primary",
-      "prompt": "~/.opencode/agents/pwe-orchestrator.md"
-    },
-    "pwe-elementor-architect": {
-      "description": "Arquiteto de componentes Elementor Free.",
-      "prompt": "~/.opencode/agents/pwe-elementor-architect.md"
-    }
-    // ... repetir para os 5 agents
-  }
-}
-```
-
-### Passo 3 — Copiar Comandos Globais
-
-Copie os 4 arquivos `pwe-*.md` para `~/.config/opencode/command/`.
-
-### Passo 4 — Configurar OpenCode Local do Projeto
-
-Dentro do projeto WordPress (ex.: `ppa-site/`), crie `.opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "skill": {
-    "pwe-generate-elementor-json": { "path": "~/.opencode/skills/pwe-generate-elementor-json" },
-    "pwe-generate-css": { "path": "~/.opencode/skills/pwe-generate-css" }
-    // ... repetir para as 18 skills
-  }
-}
-```
-
-Alternativa: configurar `.opencode/skills/` local com symlinks para a suíte global.
-
-### Passo 5 — Validar
+Abra o OpenCode com o diretório atual na raiz deste repositório:
 
 ```bash
-cd ~/projects/ppa-site
+cd ~/Pangolim-Web-Engine
 opencode
-
-# No Tab, devem aparecer os 5 agents pwe-*
-# Testar comando
-/pwe-analyze --url https://exemplo.com --tokens
 ```
+
+Os cinco comandos `/pwe-*`, os seis agentes e as skills são carregados da configuração local. Não copie arquivos para configuração global nem inicie esta versão de dentro da pasta de um site cliente.
+
+### Limite atual
+
+Os comandos salvam resultados em `.opp/` **dentro do checkout do Pangolim Web Engine**. A instalação dos arquivos gerados no WordPress cliente é manual. Para gravar diretamente no site cliente, é necessário implementar e validar um fluxo explícito de destino; passar o caminho do cliente como argumento não habilita isso.
 
 ---
 
@@ -334,7 +304,7 @@ opencode
 
 **`pwe-reviewer` reprova entrega**
 - Ler relatório — itens Critical bloqueiam entrega
-- Corrigir e reenviar (loop de revisão até 3x)
+- Corrigir e reenviar em blocos de até 3 tentativas. Se ainda houver pendências, aguardar autorização humana antes do próximo bloco; qualquer ressalva pendente bloqueia a entrega/instalação.
 
 **Skill não encontrada**
 - Verificar se `.opencode/skills/pwe-*/SKILL.md` existe
@@ -362,7 +332,7 @@ Interessado em ajudar a evoluir a suíte? Consulte nosso [Guia de Contribuição
 
 ## Versão
 
-**Versão da suíte:** 2.0.0  
-**Última atualização:** 2026-08-21  
-**Engine:** Elementor Free + tema Hello  
+**Versão da suíte:** 2.0.0
+**Última atualização:** 2026-10-27
+**Engine:** Elementor Free + tema Hello
 **Autor:** Pangolim Criativo

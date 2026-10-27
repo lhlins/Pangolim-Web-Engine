@@ -1,8 +1,8 @@
-﻿---
+---
 name: pwe-extract-design-tokens
 
 description: >
-  Converte os estilos extraídos de um site (CSS computado, variáveis, valores hardcoded)
+  Converte declarações CSS observadas no material recebido (variáveis, valores declarados)
   em tokens de design padronizados, compatíveis com as variáveis CSS do Engine (--pwe-*).
   Mapeia gaps entre o site analisado e o Design System atual do projeto.
 
@@ -15,27 +15,24 @@ capabilities:
   - design-token-extraction
   - gap-analysis
   - variable-mapping
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 constraints:
   - Nunca gerar CSS para componentes
   - Toda conversão deve respeitar a escala base do Pangolim Web Engine
-  - Sempre identificar se o token já existe no DS atual ou se é novo
+  - Sempre identificar se o token já existe no DS atual ou se é novo, somente quando o DS foi fornecido
+  - Associar cada token à declaração CSS observada; não chamar inferências de estilos computados
+  - Não declarar match/update/new contra DS sem arquivo ou conteúdo do DS fornecido
 ---
 
 # Mission
 
-Transformar estilos brutos extraídos (CSS) em um conjunto estruturado de Design Tokens
+Transformar declarações CSS observadas no conteúdo recebido em um conjunto estruturado de Design Tokens
 compatíveis com o sistema do Pangolim Web Engine (--pwe-*).
 
 ---
 
 # Inputs
 
-- Dados brutos de análise de estilos (nalyze-site-styles)
+- Dados brutos efetivamente disponíveis da análise de estilos (`pwe-analyze-site-styles`)
 - Design System atual do projeto (para referência e gap analysis)
 
 ---
@@ -44,7 +41,7 @@ compatíveis com o sistema do Pangolim Web Engine (--pwe-*).
 
 ## 1. Normalização de Valores
 
-Para cada estilo extraído:
+Para cada declaração de estilo observada no CSS recebido:
 - Converter tudo para a unidade padrão do engine (px, rem, ou valores fluidos clamp())
 - Normalizar cores para formato estável (hex 8-digit #RRGGBBAA)
 - Normalizar sombras e radius para escalas pré-definidas (sm, md, lg...)
@@ -127,7 +124,7 @@ Ex: --pwe-space-4 | 16px | 16px | MATCH
 
 Antes de finalizar, validar:
 - [ ] Todos os tokens mapeados para a convenção --pwe-*
-- [ ] Status de match/update/new definido para cada um
+- [ ] Status de match/update/new só definido quando o Design System foi fornecido; caso contrário, marcar como não comparado
 - [ ] Fontes (ex: 16px extraído de .hero__title) registradas
 - [ ] Gaps críticos identificados no relatório
 
@@ -138,4 +135,4 @@ Antes de finalizar, validar:
 Skill concluída quando:
 - Relatório de tokens gerado
 - JSON de tokens salvo
-- Mapeamento de status para cada token realizado
+- Mapeamento de status para cada token realizado quando há DS; caso contrário, a ausência de comparação está declarada

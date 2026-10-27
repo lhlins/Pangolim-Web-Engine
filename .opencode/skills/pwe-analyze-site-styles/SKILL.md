@@ -1,8 +1,8 @@
-﻿---
+---
 name: pwe-analyze-site-styles
 
 description: >
-  Extrai e cataloga todos os estilos de um site: cores, tipografia, espacamentos,
+  Cataloga estilos declarados que estejam acessíveis: cores, tipografia, espacamentos,
   border-radius, sombras, breakpoints, animacoes, transicoes. Converte para tokens
   compativeis com variaveis CSS (--pwe-*) e identifica gaps vs Design System do engine.
 
@@ -18,11 +18,6 @@ capabilities:
   - typography-analysis
   - spacing-analysis
   - animation-analysis
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 constraints:
   - Nunca gerar CSS para componentes
   - Sempre converter valores para nomenclatura --pwe-*
@@ -31,9 +26,7 @@ constraints:
 
 # Mission
 
-Extrair o Design System implícito de um site: todas as decisoes visuais codificadas
-em CSS (inline, linked, computed), estruturar como tokens tipados e mapear para
-o vocabulario de variaveis CSS do Pangolim (--pwe-*).
+Extrair tokens apenas do HTML/CSS efetivamente disponível via `webfetch` ou fornecido pelo usuário. Não há navegador para executar a página, baixar automaticamente todas as folhas de estilo ou ler estilos computados.
 
 ---
 
@@ -49,11 +42,12 @@ o vocabulario de variaveis CSS do Pangolim (--pwe-*).
 
 ## 1. Coletar CSS
 
-Fontes (em ordem de prioridade):
-1. CSS inline: <style>, style="" attributes
-2. CSS linked: <link rel="stylesheet"> (fetch cada um, max 10 arquivos, 500KB cada)
-3. CSS-in-JS: procurar por styled-components, emotion, JSS patterns no JS
-4. Computed styles (heuristica): para elementos-chave, inferir de classes/frameworks conhecidos
+Fontes permitidas:
+1. CSS inline (`<style>`, `style=""`) presente no conteúdo recebido.
+2. CSS vinculado somente se o conteúdo da folha também for retornado/acessível pela ferramenta e analisado explicitamente.
+3. Marcadores CSS-in-JS apenas se o código estiver presente no material recebido.
+
+Não afirmar download de folhas de estilo, CSS-in-JS executado ou computed styles com base apenas em um link ou nome de classe. Classes/frameworks são pistas, não valores computados.
 
 Para cada arquivo CSS:
 - Parsear rules (seletores + declaracoes)
@@ -73,11 +67,11 @@ Coletar todas as ocorrencias de:
 - currentColor
 - CSS custom properties (--*)
 
-Para cada cor unica:
+Para cada cor observada no material recebido:
 - Valor original + formato normalizado (hex 8-digit #RRGGBBAA)
-- Onde aparece: lista de (seletor, propriedade, arquivo/linha)
-- Classificacao heuristica: primary, secondary, accent, neutral, success, warning, error, background, text, border, link, overlay
-- Contraste vs fundo (se fundo detectado): ratio WCAG
+- Onde aparece: URL e seletor/propriedade/linha somente quando localizáveis no conteúdo; caso contrário, citar a fonte sem inventar posição
+- Classificação sugerida: primary, secondary, accent, neutral, success, warning, error, background, text, border, link, overlay (marcar como inferência)
+- Contraste: só calcular se foreground e background estiverem explicitamente declarados no CSS recebido; o resultado é um cálculo isolado, não auditoria WCAG nem prova de contraste efetivo no navegador.
 - Mapeamento --pwe-color-*: sugerir nome semantico
 
 ## 3. Extrair Tipografia
@@ -182,6 +176,8 @@ Detectar por classes/seletores:
 
 # Output
 
+Os números, cores, framework e contagens nos exemplos abaixo são ilustrativos, não dados do site analisado. Usar apenas valores encontrados no CSS recebido; ausências ficam `não observado`.
+
 ## Relatorio Texto
 
 `
@@ -252,10 +248,9 @@ Base unit: 4px
 --pwe-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)
 
 === BREAKPOINTS ===
-Detectados: [640, 768, 1024, 1280, 1536]
-Framework: tailwind
-Padrao DS: [640, 768, 1024, 1280, 1536] - MATCH
-Nao-padrao: []
+Detectados no CSS recebido: [valores observados ou não observados]
+Framework: [identificação explícita ou não identificado]
+Comparação com DS: [somente se fornecido; caso contrário não comparado]
 
 === ANIMACOES ===
 --pwe-transition-fast: 150ms ease
@@ -271,10 +266,8 @@ Nao-padrao: []
 Animacoes pesadas detectadas: 0
 
 === FRAMEWORK ===
-Detectado: Tailwind CSS v3.x
-Classes utilitarias: 847 ocorrencias
-CSS custom: 23 regras
-Metodologia: Utility-first
+Marcadores observados: [nomes de classes, imports ou declarações que aparecem no conteúdo]
+Framework identificado: [somente se houver evidência explícita; caso contrário, não identificado]
 `
 
 ## JSON Bruto (styles-[domain]-[timestamp].json)
@@ -284,7 +277,7 @@ Metodologia: Utility-first
   "url": "https://...",
   "timestamp": "2026-08-14T...",
   "colors": [
-    {"token": "--pwe-color-primary", "value": "#2563eb", "original": "rgb(37, 99, 235)", "occurrences": 45, "category": "primary", "contrast": {"vsWhite": 4.5, "vsBlack": 4.6}, "selectors": [".btn-primary", "a"]}
+    {"token": "--pwe-color-primary", "value": "[valor observado]", "original": "[declaração CSS]", "occurrences": "[contagem no conteúdo recebido ou não contada]", "category": "[inferência semântica]", "contrast": null, "source": "[URL e trecho/seletor se disponível]"}
   ],
   "typography": {
     "families": {"base": ["Inter", "system-ui", "sans-serif"], "heading": ["Inter", "system-ui", "sans-serif"]},
@@ -308,13 +301,13 @@ Metodologia: Utility-first
 # Validation
 
 Antes de finalizar:
-- [ ] CSS coletado de todas as fontes (inline, linked, JS)
-- [ ] Pelo menos 1 cor, 1 fonte, 1 espacamento extraidos
+- [ ] CSS limitado às fontes cujo conteúdo foi efetivamente recebido
+- [ ] Não exigir valores ausentes; marcar como não observados e declarar análise parcial quando necessário
 - [ ] Todos valores mapeados para nomenclatura --pwe-*
 - [ ] Fonte (seletor + propriedade + arquivo) registrada para cada token
-- [ ] Breakpoints comparados com DS padrao
-- [ ] Framework identificado
-- [ ] Animacoes pesadas flaggadas
+- [ ] Breakpoints comparados com o DS somente se o DS foi fornecido
+- [ ] Framework só identificado quando houver marcador explícito
+- [ ] Animações descritas a partir de declarações observadas; impacto de desempenho não inferido como medição
 
 ---
 
@@ -322,6 +315,6 @@ Antes de finalizar:
 
 Skill concluida quando:
 - Relatorio texto entregue ao agente
-- JSON bruto salvo
+- JSON salvo somente quando a gravação realmente ocorreu; caso contrário declarar que não foi salvo
 - Mapeamento --pwe-* completo para cores, tipo, espacamento, radius, sombras
 - Gaps vs DS atual documentados (se DS fornecido)

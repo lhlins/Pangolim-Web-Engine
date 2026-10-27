@@ -57,8 +57,9 @@ const COLOR_PROPS = [
 
 const WHATSAPP_COLORS = new Set(['#25D366', '#20BD5A', 'var(--pwe-azul-waldorf)', 'var(--pwe-verde-floresta)']);
 const HEX_REGEX = /#[0-9a-fA-F]{3,8}/g;
-const MOJIBAKE_REGEX = /Ã§|Ãµ|Ã£|Ã¡|Ã©|Ã³|Ã­|Ãº|Ã´|Ã¢|Ãª|Ã¼|Ã±/g;
-const PWE_VAR_REGEX = /var\(--pwe-[^)]+\)/g;
+const HEX_TEST_REGEX = /#[0-9a-fA-F]{3,8}/;
+const MOJIBAKE_REGEX = /Ã§|Ãµ|Ã£|Ã¡|Ã©|Ã³|Ã­|Ãº|Ã´|Ã¢|Ãª|Ã¼|Ã±/;
+const PWE_VAR_REGEX = /var\(--pwe-[^)]+\)/;
 
 // ============================================
 // UTILS
@@ -86,7 +87,44 @@ function checkUTF8(filepath) {
 }
 
 function checkSchema(json) {
-  return !!(json.version && json.title && json.type && Array.isArray(json.content));
+  return !!(
+    json && typeof json === 'object' && !Array.isArray(json) &&
+    typeof json.version === 'string' && json.version.trim() &&
+    typeof json.title === 'string' && json.title.trim() &&
+    typeof json.type === 'string' && json.type.trim() &&
+    Array.isArray(json.content)
+  );
+}
+
+function findElementStructureError(elements, location = 'content') {
+  for (let index = 0; index < elements.length; index += 1) {
+    const element = elements[index];
+    const elementLocation = `${location}[${index}]`;
+
+    if (!element || typeof element !== 'object' || Array.isArray(element)) {
+      return `${elementLocation} deve ser um objeto.`;
+    }
+    if (element.settings !== undefined && (!element.settings || typeof element.settings !== 'object' || Array.isArray(element.settings))) {
+      return `${elementLocation}.settings deve ser um objeto.`;
+    }
+    if (element.elements !== undefined && !Array.isArray(element.elements)) {
+      return `${elementLocation}.elements deve ser uma lista.`;
+    }
+    if (Array.isArray(element.elements)) {
+      const childError = findElementStructureError(element.elements, `${elementLocation}.elements`);
+      if (childError) return childError;
+    }
+  }
+  return null;
+}
+
+function emitFailure(name, message) {
+  console.log(JSON.stringify({
+    status: 'FAIL',
+    checks: [{ name, level: 'critical', passed: false, message }],
+    summary: { critical_passed: 0, critical_failed: 1, warnings: 0 }
+  }, null, 2));
+  process.exitCode = 1;
 }
 
 // ============================================
@@ -136,7 +174,8 @@ function validateFlexLayout(content, checks, assertivenessLevel) {
     }
 
     // Get direct children that are containers or widgets (elements that take width)
-    const layoutChildren = container.elements.filter(el => 
+    const elements = Array.isArray(container.elements) ? container.elements : [];
+    const layoutChildren = elements.filter(el =>
       el.elType === 'container' || el.elType === 'widget'
     );
 
@@ -345,7 +384,8 @@ function validatePerformance(content, checks, assertivenessLevel) {
     }
 
     // Count direct children that are containers or widgets
-    const layoutChildren = container.elements.filter(el => 
+    const elements = Array.isArray(container.elements) ? container.elements : [];
+    const layoutChildren = elements.filter(el =>
       el.elType === 'container' || el.elType === 'widget'
     );
 
@@ -356,7 +396,7 @@ function validatePerformance(content, checks, assertivenessLevel) {
         name: 'widget-count', 
         level: level, 
         passed: false, 
-        message: `Container ${containerId}: ${layoutChildren} widgets > ${maxWidgetsPerContainer} recommended` 
+        message: `Container ${containerId}: ${layoutChildren.length} elementos > ${maxWidgetsPerContainer} recomendados`
       });
     } else {
       checks.push({ name: 'widget-count', level: 'warning', passed: true });
@@ -489,7 +529,7 @@ function validateElementorStructure(content, checks, depth = 0) {
       for (const prop of COLOR_PROPS) {
         const value = item.settings[prop];
         if (value && typeof value === 'string') {
-          if (HEX_REGEX.test(value) && !WHATSAPP_COLORS.has(value) && !PWE_VAR_REGEX.test(value)) {
+          if (HEX_TEST_REGEX.test(value) && !WHATSAPP_COLORS.has(value) && !PWE_VAR_REGEX.test(value)) {
             checks.push({
               name: 'ds-colors',
               level: 'critical',
@@ -579,25 +619,45 @@ function validateJS(jsPath, checks) {
 function main() {
   const args = process.argv.slice(2);
   if (args.length !== 1) {
-    console.error('Uso: node validate-component.mjs <caminho-do-componente>');
-    console.error(`Exemplo: node validate-component.mjs .opp/components/hero`);
-    console.error(`Diretório atual: ${process.cwd()}`);
-    console.error(`Diretório raiz PWE: ${PANGOLIM_ROOT}`);
-    process.exit(1);
+    emitFailure('input', 'Uso: node validate-component.mjs <pasta-do-componente>. Exemplo: .opp/components/hero');
+    return;
   }
 
-  // Validate and normalize component path relative to PWE root
-  const normalizedPath = validatePath(args[0]);
-  const componentPath = path.dirname(normalizedPath);
-  const jsonPath = path.join(componentPath, 'component.json');
-  const cssPath = path.join(componentPath, 'component.css');
-  const jsPath = path.join(componentPath, 'component.js');
+  let componentPath;
+  try {
+    componentPath = validatePath(args[0]);
+  } catch (error) {
+    emitFailure('input-path', error.message);
+    return;
+  }
+
+  let componentStat;
+  try {
+    componentStat = fs.statSync(componentPath);
+  } catch (error) {
+    emitFailure('input-path', `Não foi possível ler a pasta do componente: ${error.message}`);
+    return;
+  }
+  if (!componentStat.isDirectory()) {
+    emitFailure('input-path', 'O caminho informado deve apontar para a pasta do componente.');
+    return;
+  }
+
+  let jsonPath;
+  try {
+    jsonPath = validatePath(path.join(componentPath, 'component.json'));
+  } catch (error) {
+    emitFailure('component-json', error.message);
+    return;
+  }
+  const cssCandidate = path.join(componentPath, 'component.css');
+  const jsCandidate = path.join(componentPath, 'component.js');
+  const cssPath = fileExists(cssCandidate) ? validatePath(cssCandidate) : cssCandidate;
+  const jsPath = fileExists(jsCandidate) ? validatePath(jsCandidate) : jsCandidate;
 
   if (!fileExists(jsonPath)) {
-    console.error(`ERRO: component.json não encontrado em ${componentPath}`);
-    console.error(`Diretório raiz PWE: ${PANGOLIM_ROOT}`);
-    console.error(`Caminho relativo fornecido: ${args[0]}`);
-    process.exit(1);
+    emitFailure('component-json', `component.json não encontrado em ${componentPath}`);
+    return;
   }
 
   const checks = [];
@@ -611,11 +671,38 @@ function main() {
   // 3. UTF-8
   checks.push({ name: 'utf8', level: 'critical', passed: checkUTF8(jsonPath) });
 
-  // Parse JSON for further checks
-  const json = JSON.parse(readFile(jsonPath));
+  // Parse once and stop before deeper checks if the file is malformed.
+  let json;
+  try {
+    json = JSON.parse(readFile(jsonPath));
+  } catch (error) {
+    emitFailure('json-parse', `JSON inválido: ${error.message}`);
+    return;
+  }
 
   // 4. Schema
-  checks.push({ name: 'schema', level: 'critical', passed: checkSchema(json) });
+  const schemaValid = checkSchema(json);
+  checks.push({ name: 'schema', level: 'critical', passed: schemaValid });
+  if (!schemaValid) {
+    const output = { status: 'FAIL', checks, summary: { critical_passed: 0, critical_failed: 1, warnings: 0 } };
+    console.log(JSON.stringify(output, null, 2));
+    process.exitCode = 1;
+    return;
+  }
+
+  const elementStructureError = findElementStructureError(json.content);
+  checks.push({
+    name: 'element-structure',
+    level: 'critical',
+    passed: !elementStructureError,
+    ...(elementStructureError ? { message: elementStructureError } : {})
+  });
+  if (elementStructureError) {
+    const output = { status: 'FAIL', checks, summary: { critical_passed: 1, critical_failed: 1, warnings: 0 } };
+    console.log(JSON.stringify(output, null, 2));
+    process.exitCode = 1;
+    return;
+  }
 
   // Get assertiveness level from component.json (default to balanced)
   const assertivenessLevel = json.assertiveness_level || 'balanced';
@@ -660,9 +747,13 @@ function main() {
 
   console.log(JSON.stringify(output, null, 2));
 
-  if (criticalFailed.length > 0) process.exit(1);
-  if (warnings.length > 0) process.exit(2);
-  process.exit(0);
+  if (criticalFailed.length > 0) process.exitCode = 1;
+  else if (warnings.length > 0) process.exitCode = 2;
+  else process.exitCode = 0;
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  emitFailure('validator-error', `Falha inesperada durante a validação: ${error.message}`);
+}

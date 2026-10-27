@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-validate-component
 
 description: |
@@ -17,11 +17,6 @@ parent_agent: pwe-elementor-architect
 
 temperature: 0.0
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: true
 
 constraints:
   - Nunca modificar arquivos.
@@ -69,6 +64,14 @@ Recebe:
   - component.css (opcional)
   - component.js (opcional)
 
+Execute o script passando a pasta do componente, a partir de qualquer diretório:
+
+```bash
+node .opencode/skills/pwe-validate-component/validate-component.mjs .opp/components/{nome-kebab}
+```
+
+O script restringe a pasta e os arquivos lidos à raiz do Pangolim Web Engine. Caminhos inexistentes, caminhos externos e links simbólicos que escapem da raiz são rejeitados.
+
 ---
 
 # Process
@@ -112,8 +115,8 @@ node -e "const j=JSON.parse(require('fs').readFileSync('component.json')); if(!j
 # Tamanho
 wc -c component.css | awk '{if($1>5120) print "WARNING: CSS > 5KB"}'
 
-# Hardcode check
-grep -E "#[0-9a-fA-F]{3,8}" component.css | grep -v "var(--pwe-" && WARNING "Possível hardcode de cor"
+# Hardcode check (falha Critical)
+grep -E "#[0-9a-fA-F]{3,8}" component.css && FAIL "Cor hardcoded detectada"
 ```
 
 ## 5. Validar JS (se existir)
@@ -180,6 +183,7 @@ heading, text-editor, image, video, button, divider, spacer, icon, google-maps, 
 
 Antes de considerar skill pronta:
 - [ ] Script roda standalone (node validate-component.mjs <path>)
+- [ ] Estrutura inesperada gera falha JSON controlada, sem stack trace
 - [ ] Exit codes corretos
 - [ ] Output JSON parseável
 - [ ] Detecta todos os casos de teste conhecidos (BOM, objeto content_width, _css_classes container, hex hardcoded)
@@ -189,6 +193,6 @@ Antes de considerar skill pronta:
 # Completion Criteria
 
 Skill concluída quando:
-- Script `validate-component.mjs` existe em `.opencode/skills/validate-component/`
+- Script `validate-component.mjs` existe em `.opencode/skills/pwe-validate-component/`
 - Documentação de uso no SKILL.md
 - Testado com componentes existentes em `.opp/components/`

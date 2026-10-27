@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-generate-improvement-patch
 
 description: >
@@ -21,11 +21,6 @@ capabilities:
 - documentation
 - traceability
 
-permissions:
-  read: true
-  write: false
-  edit: false
-  bash: false
 
 constraints:
 

@@ -1,4 +1,4 @@
-﻿---
+---
 name: pwe-build-elementor-structure
 
 description: >
@@ -40,7 +40,7 @@ Recebe:
 * Design System
 
 * Inventario de limitacoes de widgets Elementor Free
-  (.opencode/knowledge/elementor-limitations.md)
+  (.opencode/knowledge/pwe-elementor-limitations.md)
 
 * Padroes obrigatorios: .opencode/standards/pwe-elementor-free-rules.md
 
@@ -87,7 +87,7 @@ Recebe:
       - Remover flex_wrap (default no-wrap) se as colunas couberem sem wrap
       - Usar width: calc(50% - gap/2) em vez de 50% fixo
 
-    Consultar .opencode/knowledge/elementor-flex-layout.md para estrategias
+    Consultar .opencode/knowledge/pwe-elementor-flex-layout.md para estrategias
     detalhadas de resolucao.
 
     Registrar a verificacao e o ajuste aplicado no blueprint.
@@ -105,7 +105,7 @@ Recebe:
     A largura maxima deve ser controlada via CSS complementar (max-width +
     margin-inline auto), nao via content_width.
 
-    Consultar .opencode/knowledge/elementor-flex-layout.md secao 4.
+    Consultar .opencode/knowledge/pwe-elementor-flex-layout.md secao 4.
 
 10. Definir estilos que permanecerao no Elementor.
 
@@ -177,7 +177,7 @@ Checklist de saída obrigatório:
 
 ### Limitacoes de widgets Elementor Free
 
-Consultar .opencode/knowledge/elementor-limitations.md para conhecer
+Consultar .opencode/knowledge/pwe-elementor-limitations.md para conhecer
 propriedades que cada widget nao renderiza. Nao depender destas
 propriedades nas configuracoes nativas do blueprint.
 
@@ -191,7 +191,7 @@ Quando o blueprint definir 2+ colunas lado a lado:
 2. Se nao gerar, registrar no blueprint a necessidade de CSS complementar
 3. Documentar o seletor estrutural que sera usado no CSS
 
-Consultar .opencode/knowledge/elementor-flex-layout.md secao 2.
+Consultar .opencode/knowledge/pwe-elementor-flex-layout.md secao 2.
 
 ### Renormalizacao do importer
 
@@ -199,7 +199,7 @@ Ao importar JSON, o Elementor pode renormalizar flex_gap e outras
 propriedades de layout. Apos ajustes manuais no _elementor_data (via
 WP-CLI), NAO re-importar o JSON — isso sobrescreve os ajustes.
 
-Consultar .opencode/knowledge/elementor-flex-layout.md secao 3.
+Consultar .opencode/knowledge/pwe-elementor-flex-layout.md secao 3.
 
 ### content_width: sempre string enum
 
@@ -213,7 +213,7 @@ Para controlar largura maxima, usar CSS complementar:
 .componente { max-width: 1280px; margin-inline: auto; }
 ```
 
-Consultar .opencode/knowledge/elementor-flex-layout.md secao 4.
+Consultar .opencode/knowledge/pwe-elementor-flex-layout.md secao 4.
 
 ---
 

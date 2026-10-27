@@ -17,11 +17,6 @@ parent_agent: pwe-orchestrator
 
 temperature: 0.0
 
-permissions:
-  read: true
-  write: true
-  edit: true
-  bash: false
 
 constraints:
   - Nunca modificar arquivos fora da allowlist de caminhos.

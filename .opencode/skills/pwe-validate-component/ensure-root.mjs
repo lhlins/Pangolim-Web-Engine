@@ -9,12 +9,11 @@
  * Faz parte do isolamento absoluto entre PWE e PAG.
  */
 
+import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import config from '../../config.mjs';
 
-const PANGOLIM_ROOT = config.root;
-const FORBIDDEN_PATH = 'Pangolim Criativo';
+const PANGOLIM_ROOT = fs.realpathSync(config.root);
 
 // Force execution context to PWE root if different
 if (process.cwd() !== PANGOLIM_ROOT) {
@@ -23,28 +22,45 @@ if (process.cwd() !== PANGOLIM_ROOT) {
 }
 
 /**
- * Valida que um caminho não escapa do diretório raiz do PWE
- * e não acessa a pasta proibida (Pangolim Criativo).
+ * Valida que um caminho existente permanece dentro do diretório raiz do PWE,
+ * inclusive após resolver links simbólicos.
  * 
  * @param {string} targetPath - Caminho a ser validado
  * @returns {string} Caminho resolvido e seguro
  * @throws {Error} Se o caminho tentar acessar fora do PWE ou a pasta proibida
  */
 export function validatePath(targetPath) {
+  if (typeof targetPath !== 'string' || targetPath.trim() === '') {
+    throw new Error('[PWE SECURITY] Informe um caminho de componente válido.');
+  }
+
   const resolved = path.resolve(PANGOLIM_ROOT, targetPath);
-  const normalized = path.normalize(resolved);
-  
-  // Verifica se o caminho resolvido está dentro do PWE root
-  if (!normalized.startsWith(PANGOLIM_ROOT)) {
-    throw new Error(`[PWE SECURITY] Acesso negado: caminho "${targetPath}" resolve para fora do PWE (${normalized})`);
+  const relativePath = path.relative(PANGOLIM_ROOT, resolved);
+  const escapesRoot = relativePath === '..' ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath);
+
+  if (escapesRoot) {
+    throw new Error(`[PWE SECURITY] Acesso negado: caminho "${targetPath}" resolve para fora da raiz do PWE.`);
   }
   
-  // Verifica se o caminho tenta acessar a pasta proibida
-  if (normalized.includes(FORBIDDEN_PATH)) {
-    throw new Error(`[PWE SECURITY] Acesso BLOQUEADO: tentativa de acessar pasta proibida "${FORBIDDEN_PATH}" via "${targetPath}"`);
+  let realPath;
+  try {
+    realPath = fs.realpathSync(resolved);
+  } catch {
+    throw new Error(`[PWE] Caminho não encontrado: "${targetPath}".`);
   }
-  
-  return normalized;
+
+  const realRelativePath = path.relative(PANGOLIM_ROOT, realPath);
+  const realPathEscapesRoot = realRelativePath === '..' ||
+    realRelativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(realRelativePath);
+
+  if (realPathEscapesRoot) {
+    throw new Error(`[PWE SECURITY] Acesso negado: "${targetPath}" aponta para fora da raiz do PWE.`);
+  }
+
+  return realPath;
 }
 
 export default PANGOLIM_ROOT;
